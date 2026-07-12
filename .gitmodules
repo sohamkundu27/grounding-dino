@@ -1,0 +1,12 @@
+[submodule "third_party/grounding_dino"]
+	path = third_party/grounding_dino
+	url = https://github.com/IDEA-Research/GroundingDINO.git
+[submodule "third_party/grounded_sam"]
+	path = third_party/grounded_sam
+	url = https://github.com/IDEA-Research/Grounded-Segment-Anything.git
+[submodule "third_party/grounded_sam_2"]
+	path = third_party/grounded_sam_2
+	url = https://github.com/IDEA-Research/Grounded-SAM-2.git
+[submodule "third_party/mm_grounding_dino"]
+	path = third_party/mm_grounding_dino
+	url = https://github.com/open-mmlab/mmdetection.git

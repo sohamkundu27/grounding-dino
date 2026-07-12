@@ -1,0 +1,66 @@
+# ---------------------------------------------------------------------------
+# Repository hygiene for the open-vocabulary detection / tracking research repo.
+#
+# Tracked:   docs, scripts, manifests, checksums, environment notes, READMEs,
+#            directory placeholders, upstream submodule pointers (commit SHAs).
+# Untracked: model weights, datasets, papers (PDFs), inference outputs, caches.
+# ---------------------------------------------------------------------------
+
+# --- Upstream source ------------------------------------------------------
+# third_party/* are Git submodules: only the commit pointer is tracked here.
+third_party/*/.git/
+
+# --- Model weights --------------------------------------------------------
+# Ignore everything under checkpoints/ except the directory skeleton and docs.
+checkpoints/**
+!checkpoints/**/
+!checkpoints/**/.gitkeep
+!checkpoints/**/*.md
+
+# --- Datasets -------------------------------------------------------------
+# Ignore all dataset payloads; keep READMEs / manual download instructions.
+datasets/**
+!datasets/**/
+!datasets/**/.gitkeep
+!datasets/**/*.md
+
+# --- Papers ---------------------------------------------------------------
+# PDFs are redistributable-by-link, not by commit. Keep the layout + notes.
+papers/**
+!papers/**/
+!papers/**/.gitkeep
+!papers/**/*.md
+
+# --- Inference / experiment outputs ---------------------------------------
+outputs/**
+!outputs/.gitkeep
+
+# --- Vendored upstream dependency files copied into environments/ ---------
+# (these are explicitly force-added; see environments/*/upstream/)
+
+# --- Model / engine / archive artifacts anywhere ---------------------------
+*.engine
+*.plan
+*.onnx
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.part
+
+# --- Python / env ---------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.egg-info/
+
+# --- OS -------------------------------------------------------------------
+.DS_Store
+Thumbs.db
