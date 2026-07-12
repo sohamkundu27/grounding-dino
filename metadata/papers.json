@@ -184,10 +184,10 @@
       "official_url": "https://arxiv.org/abs/2304.02643",
       "pdf_url": "https://arxiv.org/pdf/2304.02643",
       "local_path": "papers/core_foundations/2023_Kirillov_Segment_Anything.pdf",
-      "sha256": "",
+      "sha256": "c6ca524e47200c3e542587ca76ac1dbc89cc67340f948c819250d16fdbd90cfb",
       "primary_or_supporting": "supporting",
       "local_runnable_system": "grounded_sam",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "verification_status": "verified",
       "notes": "SAM: the promptable segmentation foundation model that Grounded SAM pairs with Grounding DINO."
     },
