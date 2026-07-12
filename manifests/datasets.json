@@ -70,13 +70,13 @@
       "actual_size_bytes": null,
       "sha256": null,
       "license": "VisDrone terms apply to the pixels (academic / non-commercial research)",
-      "download_status": "blocked_on_visdrone",
-      "extraction_status": "not_started",
-      "image_count": 0,
+      "download_status": "complete",
+      "extraction_status": "linked",
+      "image_count": 8536,
       "annotation_count": null,
-      "missing_count": 8536,
-      "manual_action": "Download the three VisDrone archives (below), run scripts/setup_visdrone.py, then scripts/prepare_refdrone.py.",
-      "notes": "8,536 unique images required. Built as SYMLINKS into datasets/visdrone2019_det/ -- images are stored once, never duplicated. RefDrone's own layout expects this flat all_image/ directory."
+      "missing_count": 0,
+      "manual_action": null,
+      "notes": "8,536/8,536 required images resolve. Built as 8,536 relative SYMLINKS into datasets/visdrone2019_det/ -- 0 regular files, so the pixels are stored exactly once (1.9 GB dereferenced). Verified by scripts/verify_refdrone.py: 0 missing, 0 broken links, 0 links escaping the VisDrone tree, 0 duplicated payloads, 0 cross-split leakage."
     },
     {
       "dataset": "refdrone",
@@ -105,15 +105,15 @@
       "local_path": "datasets/visdrone2019_det/train/",
       "archive_path": "datasets/visdrone2019_det/archives/VisDrone2019-DET-train.zip",
       "expected_size_bytes": null,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 1549875511,
+      "sha256": "86a77eba93137bfc16e4993860de9245b0675c0dba0d3ab98fb458699e256f84",
       "license": "VisDrone challenge terms - academic / non-commercial research. No LICENSE file upstream.",
-      "download_status": "manual_action_required",
-      "extraction_status": "not_started",
-      "image_count": null,
-      "annotation_count": null,
+      "download_status": "downloaded_manually",
+      "extraction_status": "extracted",
+      "image_count": 6471,
+      "annotation_count": 6471,
       "missing_count": null,
-      "manual_action": "Download in a browser from https://github.com/VisDrone/VisDrone-Dataset (Task 1, trainset) and save to datasets/visdrone2019_det/archives/VisDrone2019-DET-train.zip. Then run: python scripts/setup_visdrone.py",
+      "manual_action": null,
       "notes": "Upstream states 1.44 GB, 6,471 images. RefDrone train needs 6,407 of them. REQUIRED. expected_size_bytes and sha256 are null because upstream publishes NO checksum and no reliable byte count -- they will be recorded from the file once it is present, rather than fabricated."
     },
     {
@@ -124,15 +124,15 @@
       "local_path": "datasets/visdrone2019_det/val/",
       "archive_path": "datasets/visdrone2019_det/archives/VisDrone2019-DET-val.zip",
       "expected_size_bytes": null,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 81638851,
+      "sha256": "abeea063037e5d20398837deb11084e652402a34ddf4f207bdf541a6f2a35ef9",
       "license": "VisDrone challenge terms - academic / non-commercial research.",
-      "download_status": "manual_action_required",
-      "extraction_status": "not_started",
-      "image_count": null,
-      "annotation_count": null,
+      "download_status": "downloaded_manually",
+      "extraction_status": "extracted",
+      "image_count": 548,
+      "annotation_count": 548,
       "missing_count": null,
-      "manual_action": "Download in a browser from https://github.com/VisDrone/VisDrone-Dataset (Task 1, valset) and save to datasets/visdrone2019_det/archives/VisDrone2019-DET-val.zip. Then run: python scripts/setup_visdrone.py",
+      "manual_action": null,
       "notes": "Upstream states 0.07 GB, 548 images. RefDrone val needs 534 of them. REQUIRED. Note even this small archive hits the Google Drive interstitial, so it cannot be fetched non-interactively either."
     },
     {
@@ -143,15 +143,15 @@
       "local_path": "datasets/visdrone2019_det/test-dev/",
       "archive_path": "datasets/visdrone2019_det/archives/VisDrone2019-DET-test-dev.zip",
       "expected_size_bytes": null,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 311045829,
+      "sha256": "78b0c5078a14ee43d0b803a354e76016d7260d1704cfd1c2dc821858d839e261",
       "license": "VisDrone challenge terms - academic / non-commercial research.",
-      "download_status": "manual_action_required",
-      "extraction_status": "not_started",
-      "image_count": null,
-      "annotation_count": null,
+      "download_status": "downloaded_manually",
+      "extraction_status": "extracted",
+      "image_count": 1610,
+      "annotation_count": 1610,
       "missing_count": null,
-      "manual_action": "Download in a browser from https://github.com/VisDrone/VisDrone-Dataset (Task 1, testset-dev) and save to datasets/visdrone2019_det/archives/VisDrone2019-DET-test-dev.zip. Then run: python scripts/setup_visdrone.py",
+      "manual_action": null,
       "notes": "Upstream states 0.28 GB, 1,610 images. RefDrone test needs 1,595 of them. REQUIRED. Ground truth IS available for test-dev (unlike test-challenge)."
     },
     {
@@ -196,14 +196,29 @@
   "split_derivation": {
     "method": "Every file_name was extracted from all three RefDrone_*_mdetr.json files and counted. Re-derived from the released files for this task rather than trusting earlier notes.",
     "measured": {
-      "train": {"records": 13022, "unique_images": 6407, "unique_expressions": 8910, "object_instances": 47557},
-      "val": {"records": 1428, "unique_images": 534, "unique_expressions": 1124, "object_instances": 4741},
-      "test": {"records": 3432, "unique_images": 1595, "unique_expressions": 2686, "object_instances": 12105},
+      "train": {
+        "records": 13022,
+        "unique_images": 6407,
+        "unique_expressions": 8910,
+        "object_instances": 47557
+      },
+      "val": {
+        "records": 1428,
+        "unique_images": 534,
+        "unique_expressions": 1124,
+        "object_instances": 4741
+      },
+      "test": {
+        "records": 3432,
+        "unique_images": 1595,
+        "unique_expressions": 2686,
+        "object_instances": 12105
+      },
       "total_unique_images": 8536,
       "cross_split_overlap": 0
     },
     "mapping": "RefDrone train -> VisDrone2019-DET-train; val -> val; test -> test-dev. Each RefDrone split is a strict subset of the corresponding VisDrone split (6,407<=6,471; 534<=548; 1,595<=1,610). test-challenge is not referenced.",
-    "mapping_status": "INFERRED from split sizes and VisDrone naming conventions. It is PROVEN only once the archives are extracted and every one of the 8,536 basenames resolves -- scripts/verify_refdrone.py is what turns this from inferred into verified.",
+    "mapping_status": "VERIFIED. The three archives were extracted (6,471 + 548 + 1,610 = 8,629 images indexed) and all 8,536 RefDrone-referenced basenames resolved against them with 0 missing. test-challenge was never downloaded and is confirmed unnecessary.",
     "artifact": "datasets/refdrone/metadata/required_images_by_split.json"
   }
 }

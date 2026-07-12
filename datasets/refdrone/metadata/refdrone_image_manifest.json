@@ -1,0 +1,19 @@
+{
+  "generated_utc": "2026-07-12T21:37:38.712059+00:00",
+  "link_mode": "symlink",
+  "visdrone_root": "datasets/visdrone2019_det",
+  "all_image_dir": "/home/soham/grounding-dino/datasets/refdrone/images/all_image",
+  "required_unique_images": 8536,
+  "resolved": 8536,
+  "missing": 0,
+  "missing_files": [],
+  "duplicate_basenames_in_visdrone": {},
+  "counts_by_split": {
+    "train": 6407,
+    "val": 534,
+    "test": 1595
+  },
+  "actions": {
+    "symlink": 8536
+  }
+}
