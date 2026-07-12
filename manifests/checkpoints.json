@@ -8,10 +8,10 @@
       "official_url": "https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth",
       "local_path": "checkpoints/grounding_dino/groundingdino_swint_ogc.pth",
       "expected_size_bytes": 693997677,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 693997677,
+      "sha256": "3b3ca2563c77c69f651d7bd133e97139c186df06231157a64c507099c52bc799",
       "license": "Apache-2.0 (weights released with the repo; trained on O365/GoldG/Cap4M)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "Primary Grounding DINO checkpoint. Official GitHub release v0.1.0-alpha. Config: groundingdino/config/GroundingDINO_SwinT_OGC.py. Shared with Grounded-SAM and Grounded-SAM-2 (do not duplicate)."
     },
     {
@@ -21,10 +21,10 @@
       "official_url": "https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha2/groundingdino_swinb_cogcoor.pth",
       "local_path": "checkpoints/grounding_dino/groundingdino_swinb_cogcoor.pth",
       "expected_size_bytes": 938057991,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 938057991,
+      "sha256": "46270f7a822e6906b655b729c90613e48929d0f2bb8b9b76fd10a856f3ac6ab7",
       "license": "Apache-2.0 (weights released with the repo)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "Official Swin-B checkpoint, publicly downloadable. Config: groundingdino/config/GroundingDINO_SwinB_cfg.py."
     },
     {
@@ -34,10 +34,10 @@
       "official_url": "https://download.openmmlab.com/mmdetection/v3.0/mm_grounding_dino/grounding_dino_swin-t_pretrain_obj365_goldg_v3det/grounding_dino_swin-t_pretrain_obj365_goldg_v3det_20231218_095741-e316e297.pth",
       "local_path": "checkpoints/mm_grounding_dino/grounding_dino_swin-t_pretrain_obj365_goldg_v3det_20231218_095741-e316e297.pth",
       "expected_size_bytes": 996512019,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 996512019,
+      "sha256": "e316e297fb302e0de4bb8ce19aab3f28118e49d05c38635cd091c4330ca17b1d",
       "license": "Apache-2.0 (OpenMMLab model zoo)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "Canonical MM-GDINO Swin-T. Also the pretrained init required by PET-DINO (README 'Pretrained Weights' table)."
     },
     {
@@ -47,10 +47,10 @@
       "official_url": "https://download.openmmlab.com/mmdetection/v3.0/mm_grounding_dino/grounding_dino_swin-t_pretrain_obj365_goldg_grit9m_v3det/grounding_dino_swin-t_pretrain_obj365_goldg_grit9m_v3det_20231204_095047-b448804b.pth",
       "local_path": "checkpoints/mm_grounding_dino/grounding_dino_swin-t_pretrain_obj365_goldg_grit9m_v3det_20231204_095047-b448804b.pth",
       "expected_size_bytes": 1093815743,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 1093815743,
+      "sha256": "b448804bb1af6fa688887f0f2454625edbeeae4e868bc95620e3e6413581051a",
       "license": "Apache-2.0 (OpenMMLab model zoo)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "Best-performing MM-GDINO Swin-T (O365+GoldG+GRIT9M+V3Det). Strongest tiny-backbone zero-shot candidate for the drone use case."
     },
     {
@@ -60,10 +60,10 @@
       "official_url": "https://download.openmmlab.com/mmdetection/v3.0/mm_grounding_dino/grounding_dino_swin-b_pretrain_all/grounding_dino_swin-b_pretrain_all-f9818a7c.pth",
       "local_path": "checkpoints/mm_grounding_dino/grounding_dino_swin-b_pretrain_all-f9818a7c.pth",
       "expected_size_bytes": 1127260938,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 1127260938,
+      "sha256": "f9818a7c6a4591d8ecda0d54491b143c5f1aedc64c21eb63822a32eb4f408aa1",
       "license": "Apache-2.0 (OpenMMLab model zoo)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "MM-GDINO Swin-B trained on the full data mixture."
     },
     {
@@ -73,10 +73,10 @@
       "official_url": "https://download.openmmlab.com/mmdetection/v3.0/mm_grounding_dino/grounding_dino_swin-l_pretrain_all/grounding_dino_swin-l_pretrain_all-56d69e78.pth",
       "local_path": "checkpoints/mm_grounding_dino/grounding_dino_swin-l_pretrain_all-56d69e78.pth",
       "expected_size_bytes": 1549406424,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 1549406424,
+      "sha256": "56d69e78a266c19f76715ff1508e875eb530cc7f5833870f0b7d74688b0da4f3",
       "license": "Apache-2.0 (OpenMMLab model zoo)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "Highest-accuracy MM-GDINO. Accuracy ceiling reference; too heavy for real-time Jetson detection."
     },
     {
@@ -86,10 +86,10 @@
       "official_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
       "local_path": "checkpoints/sam/sam_vit_h_4b8939.pth",
       "expected_size_bytes": 2564550879,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 2564550879,
+      "sha256": "a7bf3b02f3ebf1267aba913ff637d9a2d5c33d3173bb679e46d9f338c26f262e",
       "license": "Apache-2.0 (Meta, Segment Anything)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "Default SAM checkpoint used by Grounded-Segment-Anything demos."
     },
     {
@@ -99,10 +99,10 @@
       "official_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
       "local_path": "checkpoints/sam/sam_vit_b_01ec64.pth",
       "expected_size_bytes": 375042383,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 375042383,
+      "sha256": "ec2df62732614e57411cdcf32a23ffdf28910380d03139ee0f4fcbe91eb8c912",
       "license": "Apache-2.0 (Meta, Segment Anything)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "Smallest SAM v1 encoder; kept as the edge/Jetson-viable SAM v1 option."
     },
     {
@@ -112,10 +112,10 @@
       "official_url": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt",
       "local_path": "checkpoints/sam2/sam2.1_hiera_large.pt",
       "expected_size_bytes": 898083611,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 898083611,
+      "sha256": "2647878d5dfa5098f2f8649825738a9345572bae2d4350a2468587ece47dd318",
       "license": "Apache-2.0 (Meta, SAM 2)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "SAM 2.1 (092824 release) as pinned by Grounded-SAM-2/checkpoints/download_ckpts.sh."
     },
     {
@@ -125,10 +125,10 @@
       "official_url": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_base_plus.pt",
       "local_path": "checkpoints/sam2/sam2.1_hiera_base_plus.pt",
       "expected_size_bytes": 323606802,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 323606802,
+      "sha256": "a2345aede8715ab1d5d31b4a509fb160c5a4af1970f199d9054ccfb746c004c5",
       "license": "Apache-2.0 (Meta, SAM 2)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "SAM 2.1 base-plus."
     },
     {
@@ -138,10 +138,10 @@
       "official_url": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt",
       "local_path": "checkpoints/sam2/sam2.1_hiera_small.pt",
       "expected_size_bytes": 184416285,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 184416285,
+      "sha256": "6d1aa6f30de5c92224f8172114de081d104bbd23dd9dc5c58996f0cad5dc4d38",
       "license": "Apache-2.0 (Meta, SAM 2)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "SAM 2.1 small. Strong candidate for the 10+ Hz tracking stage on Jetson Orin."
     },
     {
@@ -151,10 +151,10 @@
       "official_url": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt",
       "local_path": "checkpoints/sam2/sam2.1_hiera_tiny.pt",
       "expected_size_bytes": 156008466,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 156008466,
+      "sha256": "7402e0d864fa82708a20fbd15bc84245c2f26dff0eb43a4b5b93452deb34be69",
       "license": "Apache-2.0 (Meta, SAM 2)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "SAM 2.1 tiny. Fastest video-tracking option; primary Jetson tracking candidate."
     },
     {
@@ -164,10 +164,10 @@
       "official_url": "https://huggingface.co/fuweifu/PET-DINO/resolve/main/pet_dino_swin-t_8xb4_12e_obj365.pth",
       "local_path": "checkpoints/pet_dino/pet_dino_swin-t_8xb4_12e_obj365.pth",
       "expected_size_bytes": 2309043797,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 2309043797,
+      "sha256": "beff20e86a46008b637edf6f519f100cb69981d1c116a03959663d276adc1736",
       "license": "Apache-2.0 (author HF repo 'fuweifu', card license apache-2.0)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "Only checkpoint published by the authors. Config: configs/pet_dino/pet_dino_swin-t_8xb4_12e_obj365.py. Supports BOTH text and visual prompts. Swin-L config exists in-repo but NO Swin-L weight is published."
     },
     {
@@ -177,10 +177,10 @@
       "official_url": "https://huggingface.co/sunzc-sunny/ngdino/resolve/main/NGDINO_T.pth",
       "local_path": "checkpoints/refdrone_ngdino/NGDINO_T.pth",
       "expected_size_bytes": 2110656821,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 2110656821,
+      "sha256": "e04c1bf44e6fcfa20ea9b03a03faa3c6a27825333278eb395bc77fea9021b8ef",
       "license": "CC BY 4.0 (per RefDrone repo LICENSE statement)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "Dataset-associated reference model, NOT one of the five primary systems. Config: configs/NGDINO/ngdino_swin-t_refdrone.py (5-epoch)."
     },
     {
@@ -190,10 +190,10 @@
       "official_url": "https://huggingface.co/sunzc-sunny/ngdino/resolve/main/NGDINO_B.pth",
       "local_path": "checkpoints/refdrone_ngdino/NGDINO_B.pth",
       "expected_size_bytes": 2835406585,
-      "actual_size_bytes": null,
-      "sha256": null,
+      "actual_size_bytes": 2835406585,
+      "sha256": "a71af17078494a13483ecb77b1f820cc1ed6b3b3687091766ad2e5fafee34879",
       "license": "CC BY 4.0 (per RefDrone repo LICENSE statement)",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "notes": "Config: configs/NGDINO/ngdino_swin-b_refdrone.py (5-epoch)."
     }
   ],
