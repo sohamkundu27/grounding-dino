@@ -3,13 +3,49 @@
 Generated after the collection run. Re-check at any time:
 
 ```bash
-python scripts/verify_downloads.py --deep    # 33 passed, 0 problems
+python scripts/verify_downloads.py --deep    # repos / checkpoints / papers
+python scripts/verify_refdrone.py            # dataset -> RESULT: OK
 python scripts/print_inventory.py
 ```
 
-**Headline:** everything that is publicly and officially downloadable was
-downloaded and verified. **One thing is outstanding: VisDrone2019-DET imagery**,
-which requires a manual browser download.
+**Headline: nothing is outstanding.** Every repository, checkpoint, paper and
+dataset component is present and verified. The VisDrone imagery — the one item
+that previously required a manual browser download — has been obtained,
+validated, extracted and linked.
+
+---
+
+## 📦 RefDrone dataset — ✅ COMPLETE
+
+| Component | Status |
+|---|---|
+| RefDrone annotations (train / val / test) | ✅ downloaded, 18.6 MB, all parse |
+| VisDrone2019-DET **train** | ✅ 6,471 images + 6,471 labels — `sha256 86a77eba9313…` |
+| VisDrone2019-DET **val** | ✅ 548 images + 548 labels — `sha256 abeea063037e…` |
+| VisDrone2019-DET **test-dev** | ✅ 1,610 images + 1,610 labels — `sha256 78b0c5078a14…` |
+| VisDrone2019-DET test-challenge | ⛔ not downloaded — **confirmed unnecessary** |
+| Archive extraction | ✅ all 3 — ZIP magic + CRC + zip-slip checked before extracting |
+| RefDrone image links | ✅ **8,536 / 8,536** symlinks, **0 missing** |
+| Missing images | ✅ **0** |
+| Broken symlinks | ✅ **0** |
+| Duplicated image payloads | ✅ **0** (8,536 symlinks, 0 regular files) |
+| Cross-split leakage | ✅ **0** |
+| Verifier | ✅ `verify_refdrone.py` → **RESULT: OK** (exit 0) |
+
+**Split mapping — verified, not assumed.** RefDrone train → VisDrone `train`,
+val → `val`, test → `test-dev`. All 8,536 referenced basenames resolved against
+the 8,629 extracted images, so test-challenge is confirmed unneeded as a measured
+fact.
+
+**Archives retained** (~1.8 GB, gitignored) at
+`datasets/visdrone2019_det/archives/`. Disk was never a constraint (605 GB free),
+so they were kept — re-downloading means clicking through Google Drive again.
+Delete with `python scripts/setup_visdrone.py --remove-archives-after` if needed.
+
+Upstream publishes **no checksums** for the VisDrone archives, so the SHA-256
+values above were computed locally on receipt and are the reproducibility anchor
+from here on. They are recorded in `manifests/datasets.json` — not fabricated
+beforehand.
 
 ---
 
@@ -60,29 +96,40 @@ staged by a prior session (`grounding_dino`, `mm_grounding_dino`, `grounded_sam`
 
 ## ⚠️ Manual action required
 
-### VisDrone2019-DET imagery — **the one real gap**
+**None remaining.**
 
-| Archive | Size | Images | Needed |
+### VisDrone2019-DET imagery — resolved
+
+This was the one gap, and it is now closed. The archives were downloaded in a
+browser by the repository owner and transferred to this machine, then validated,
+extracted and linked automatically.
+
+| Archive | Bytes received | Images | SHA-256 (computed locally) |
 |---|---|---|---|
-| `VisDrone2019-DET-train.zip` | 1.44 GB | 6,471 | ✅ |
-| `VisDrone2019-DET-val.zip` | 0.07 GB | 548 | ✅ |
-| `VisDrone2019-DET-test-dev.zip` | 0.28 GB | 1,610 | ✅ |
-| `VisDrone2019-DET-test-challenge.zip` | 0.28 GB | 1,580 | ❌ not needed |
+| `VisDrone2019-DET-train.zip` | 1,549,875,511 | 6,471 | `86a77eba9313…` |
+| `VisDrone2019-DET-val.zip` | 81,638,851 | 548 | `abeea063037e…` |
+| `VisDrone2019-DET-test-dev.zip` | 311,045,829 | 1,610 | `78b0c5078a14…` |
+| `VisDrone2019-DET-test-challenge.zip` | — | — | ⛔ **not downloaded, not needed** |
 
-**Why not automated:** the official VisDrone repo
-(<https://github.com/VisDrone/VisDrone-Dataset>) distributes only via Google Drive
-and BaiduYun. A `HEAD` against the Drive direct-download endpoint returns
-`content-type: text/html` — the virus-scan interstitial — not the ZIP. That is a
-manual-browser-access requirement, so it was **documented, not bypassed** with a
-scraped confirm-token, and **no unofficial mirror** (Kaggle, re-upload, scraped
+**Why it could not be automated:** the official VisDrone repo
+(<https://github.com/VisDrone/VisDrone-Dataset>) and RefDrone's own dataset card
+distribute the imagery only via Google Drive and BaiduYun. A plain `GET` against
+the Drive endpoint returns Google's **"Virus scan warning"** HTML page rather than
+the ZIP — for the 0.07 GB val archive as well as the 1.44 GB train archive, so
+file size is not the trigger. The `aiskyeye.com` object-detection download
+sub-pages return **HTTP 404**, so no alternative official host exists.
+
+The interstitial was **not bypassed** with a scraped confirm-token, and **no
+unofficial mirror** (Kaggle, `Voxel51/VisDrone2019-DET`, re-upload, scraped
 archive) was substituted.
 
-**→ Exact steps: `datasets/visdrone2019_det/README.md`**
+**Validation caught a real problem.** The first validation pass ran while `scp`
+was still writing and correctly **rejected** the partially-transferred test-dev
+archive (`file` reported "Zip archive data", but the End-of-Central-Directory
+record was absent). Re-validating after the transfer settled passed cleanly. The
+"reject before extracting" design did its job.
 
-Afterwards: `python scripts/prepare_refdrone.py --refdrone-annotations
-datasets/refdrone/annotations --visdrone-root datasets/visdrone2019_det --dry-run`
-builds `datasets/refdrone/images/all_image/` as symlinks (8,536 images, not
-duplicated).
+**→ Steps, for anyone rebuilding: `datasets/visdrone2019_det/README.md`**
 
 ## 🔒 Authentication required
 
