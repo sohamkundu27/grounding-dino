@@ -165,10 +165,10 @@
       "official_url": "https://arxiv.org/abs/2103.14030",
       "pdf_url": "https://arxiv.org/pdf/2103.14030",
       "local_path": "papers/core_foundations/2021_Liu_Swin_Transformer.pdf",
-      "sha256": "",
+      "sha256": "dfdc7631fe2a35bb5892080b9c0eeadc4432d55cf1856f84bc88802efa877a7c",
       "primary_or_supporting": "supporting",
       "local_runnable_system": "grounding_dino",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "verification_status": "verified",
       "notes": "The hierarchical vision backbone (Swin-T/B/L) used as Grounding DINO / MM-Grounding-DINO image encoder."
     },
