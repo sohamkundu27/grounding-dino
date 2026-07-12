@@ -203,10 +203,10 @@
       "official_url": "https://arxiv.org/abs/2408.00714",
       "pdf_url": "https://arxiv.org/pdf/2408.00714",
       "local_path": "papers/core_foundations/2024_Ravi_SAM_2.pdf",
-      "sha256": "",
+      "sha256": "664f5c4254db441569ecfe36a2a2fa91a1ecec5f4d31b3bcc5d451193efc2c0d",
       "primary_or_supporting": "supporting",
       "local_runnable_system": "grounded_sam_2",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "verification_status": "verified",
       "notes": "SAM 2: adds memory-based video segmentation/tracking. The academic foundation for the Grounded SAM 2 software integration (system #4) and the 10+ Hz tracking stage."
     },
