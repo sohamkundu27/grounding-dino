@@ -146,10 +146,10 @@
       "official_url": "https://arxiv.org/abs/1810.04805",
       "pdf_url": "https://arxiv.org/pdf/1810.04805",
       "local_path": "papers/core_foundations/2019_Devlin_BERT.pdf",
-      "sha256": "",
+      "sha256": "5692a5514787a8c6727b4ff3b726a3385798bc68e12138d1d4af83947e2acf6e",
       "primary_or_supporting": "supporting",
       "local_runnable_system": "grounding_dino",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "verification_status": "verified",
       "notes": "The text encoder family used by Grounding DINO to embed language prompts."
     },
