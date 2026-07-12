@@ -1,10 +1,23 @@
 {
   "_comment": "Authoritative record for the curated Grounding DINO literature collection. One object per unique paper. 'sha256' and generated artifacts (papers.csv, papers.bib, checksums.sha256, download_status.md) are produced/refreshed by scripts/generate_inventory.py. PDFs are fetched only from official sources (arXiv / CVF / official publisher) by scripts/download_papers.py, which validates the %PDF magic bytes. This file complements manifests/papers.json (the drone-project reproducibility manifest); this one is the expanded literature record.",
   "schema": [
-    "category", "system", "title", "authors", "year", "venue", "arxiv_id",
-    "doi", "official_url", "pdf_url", "local_path", "sha256",
-    "primary_or_supporting", "local_runnable_system", "download_status",
-    "verification_status", "notes"
+    "category",
+    "system",
+    "title",
+    "authors",
+    "year",
+    "venue",
+    "arxiv_id",
+    "doi",
+    "official_url",
+    "pdf_url",
+    "local_path",
+    "sha256",
+    "primary_or_supporting",
+    "local_runnable_system",
+    "download_status",
+    "verification_status",
+    "notes"
   ],
   "papers": [
     {
@@ -95,10 +108,10 @@
       "official_url": "https://arxiv.org/abs/2005.12872",
       "pdf_url": "https://arxiv.org/pdf/2005.12872",
       "local_path": "papers/core_foundations/2020_Carion_DETR.pdf",
-      "sha256": "",
+      "sha256": "d4b846bd44896e1d21527f48eddc422c263c9a4f8a3fa4be249750956882698d",
       "primary_or_supporting": "supporting",
       "local_runnable_system": "grounding_dino",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "verification_status": "verified",
       "notes": "DETR: the transformer set-prediction detector that DINO (and hence Grounding DINO) descends from. Foundation reading."
     },
