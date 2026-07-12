@@ -1,5 +1,5 @@
 {
-  "_comment": "Papers are fetched from arXiv or CVF Open Access only. 'sha256' and 'status' are filled in by scripts/download_papers.py, which also verifies each file begins with the %PDF magic bytes.",
+  "_comment": "Papers are fetched from arXiv or CVF Open Access only. 'sha256' and 'status' are filled in by scripts/download_papers.py, which also verifies each file begins with the %PDF magic bytes. NOTE: local_path values point into the curated papers/ taxonomy; the expanded literature record is metadata/papers.json.",
   "papers": [
     {
       "title": "Grounding DINO: Marrying DINO with Grounded Pre-Training for Open-Set Object Detection",
@@ -9,7 +9,7 @@
       "arxiv_id": "2303.05499",
       "official_url": "https://arxiv.org/abs/2303.05499",
       "pdf_url": "https://arxiv.org/pdf/2303.05499",
-      "local_path": "papers/grounding_dino/2023_Liu_GroundingDINO.pdf",
+      "local_path": "papers/locally_runnable_systems/01_grounding_dino/2023_Liu_Grounding_DINO.pdf",
       "sha256": "ba1c64ec2ac4fedeb50b269eadc994456a8428dbe64a8dba2673f22df0fa20b3",
       "status": "downloaded"
     },
@@ -21,7 +21,7 @@
       "arxiv_id": "2401.02361",
       "official_url": "https://arxiv.org/abs/2401.02361",
       "pdf_url": "https://arxiv.org/pdf/2401.02361",
-      "local_path": "papers/mm_grounding_dino/2024_Zhao_MM-Grounding-DINO.pdf",
+      "local_path": "papers/locally_runnable_systems/02_mm_grounding_dino/2024_Zhao_MM_Grounding_DINO.pdf",
       "sha256": "e42cf1b25cefaf3706ff277f78e24ca771815f65a23f2c7b9ae39972892520e5",
       "status": "downloaded"
     },
@@ -33,7 +33,7 @@
       "arxiv_id": "2401.14159",
       "official_url": "https://arxiv.org/abs/2401.14159",
       "pdf_url": "https://arxiv.org/pdf/2401.14159",
-      "local_path": "papers/grounded_sam/2024_Ren_GroundedSAM.pdf",
+      "local_path": "papers/locally_runnable_systems/03_grounded_sam/2024_Ren_Grounded_SAM.pdf",
       "sha256": "9dd6cbb7b6f0af34fc840d4c7d0e185f8e8d4427ac91a3e9a745fe8e0a7a91cf",
       "status": "downloaded"
     },
@@ -45,7 +45,7 @@
       "arxiv_id": "2304.02643",
       "official_url": "https://arxiv.org/abs/2304.02643",
       "pdf_url": "https://arxiv.org/pdf/2304.02643",
-      "local_path": "papers/grounded_sam/2023_Kirillov_SegmentAnything.pdf",
+      "local_path": "papers/core_foundations/2023_Kirillov_Segment_Anything.pdf",
       "sha256": "c6ca524e47200c3e542587ca76ac1dbc89cc67340f948c819250d16fdbd90cfb",
       "status": "downloaded"
     },
@@ -57,7 +57,7 @@
       "arxiv_id": "2408.00714",
       "official_url": "https://arxiv.org/abs/2408.00714",
       "pdf_url": "https://arxiv.org/pdf/2408.00714",
-      "local_path": "papers/sam2/2024_Ravi_SAM2.pdf",
+      "local_path": "papers/core_foundations/2024_Ravi_SAM_2.pdf",
       "sha256": "664f5c4254db441569ecfe36a2a2fa91a1ecec5f4d31b3bcc5d451193efc2c0d",
       "status": "downloaded"
     },
@@ -69,7 +69,7 @@
       "arxiv_id": "2604.00503",
       "official_url": "https://arxiv.org/abs/2604.00503",
       "pdf_url": "https://arxiv.org/pdf/2604.00503",
-      "local_path": "papers/pet_dino/2026_Fu_PET-DINO.pdf",
+      "local_path": "papers/locally_runnable_systems/05_pet_dino/2026_Fu_PET_DINO.pdf",
       "sha256": "f930ad8eee0def3559aa7e2b3a2ffdc3bca51cd698db51c707c78f4312a76a7e",
       "status": "downloaded"
     },
@@ -81,7 +81,7 @@
       "arxiv_id": "2502.00392",
       "official_url": "https://arxiv.org/abs/2502.00392",
       "pdf_url": "https://arxiv.org/pdf/2502.00392",
-      "local_path": "papers/refdrone/2025_Sun_RefDrone.pdf",
+      "local_path": "papers/domain_adaptations/2025_Sun_RefDrone.pdf",
       "sha256": "263c15709d354c0ac4e24ada166d700f976cea1b2e39f12dc8ecb9238534dc36",
       "status": "downloaded"
     }
