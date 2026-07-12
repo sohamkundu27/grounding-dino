@@ -65,54 +65,75 @@ images only).
 
 Required splits were **derived from the annotations**, not assumed — every
 referenced `file_name` was extracted and matched against the VisDrone split
-structure:
+structure. The mapping is now **verified**, not merely inferred: all three
+archives were extracted (8,629 images indexed) and every one of the 8,536
+referenced basenames resolved against them, with **0 missing**.
 
-| RefDrone split | Images needed | VisDrone archive | Archive size |
-|---|---|---|---|
-| train | 6,407 | `VisDrone2019-DET-train.zip` (6,471 imgs) | 1.44 GB |
-| val | 534 | `VisDrone2019-DET-val.zip` (548 imgs) | 0.07 GB |
-| test | 1,595 | `VisDrone2019-DET-test-dev.zip` (1,610 imgs) | 0.28 GB |
-| — | — | ~~`test-challenge`~~ | **not needed** |
+| RefDrone split | Images needed | VisDrone split | Archive has | Matched |
+|---|---|---|---|---|
+| train | 6,407 | `train` | 6,471 | ✅ 6,407 / 0 missing |
+| val | 534 | `val` | 548 | ✅ 534 / 0 missing |
+| test | 1,595 | `test-dev` | 1,610 | ✅ 1,595 / 0 missing |
+| — | — | ~~`test-challenge`~~ | 1,580 | ⛔ **never referenced — not downloaded** |
 
-Each RefDrone split is a strict subset of the matching VisDrone split, so
-**test-challenge must not be downloaded**. The `9999xxx_*` filenames (5,090 in
-train, 1,351 in test) are VisDrone's static-camera images and ship inside the
-standard archives — nothing extra needed.
+Each RefDrone split is a strict subset of the matching VisDrone split. Because
+all 8,536 images resolved from train + val + test-dev alone, **test-challenge is
+confirmed unnecessary** — this is now a measured fact, not an assumption.
+`verify_refdrone.py` warns if that directory is ever populated.
+
+The `9999xxx_*` filenames (5,090 in train, 1,351 in test) are VisDrone's
+static-camera images and ship inside the standard archives — nothing extra needed.
 
 Artifact: `datasets/refdrone/metadata/required_images_by_split.json`.
 
-### Directory layout
+### Final directory layout
 
 ```
 datasets/
 ├── refdrone/
-│   ├── annotations/       RefDrone_{train,val,test}_mdetr.json   ← DOWNLOADED (18.6 MB)
-│   ├── images/all_image/  symlinks into visdrone2019_det/         ← EMPTY, needs VisDrone
-│   └── metadata/          required_images_by_split.json, stats    ← GENERATED
+│   ├── annotations/       RefDrone_{train,val,test}_mdetr.json   ← 18.6 MB
+│   ├── images/all_image/  8,536 SYMLINKS into visdrone2019_det/  ← COMPLETE
+│   ├── metadata/          refdrone_manifest.json, stats, required_images_by_split.json
+│   └── README.md
 └── visdrone2019_det/
-    ├── train/  val/  test/                                        ← EMPTY, manual download
-    └── README.md          exact manual download instructions
+    ├── archives/          the 3 ZIPs (~1.8 GB, gitignored, deletable)
+    ├── train/{images,annotations}      6,471 jpg + 6,471 txt
+    ├── val/{images,annotations}          548 jpg +   548 txt
+    ├── test-dev/{images,annotations}   1,610 jpg + 1,610 txt
+    └── README.md
 ```
 
-`images/all_image/` is built by `scripts/prepare_refdrone.py` as **symlinks**, so
-the 8,536 images are stored once, in the VisDrone tree, and never duplicated.
+`images/all_image/` is built by `scripts/prepare_refdrone.py` as **symlinks**:
+8,536 links, **0 regular files**. The 1.9 GB of pixels lives once in the VisDrone
+tree; nothing is duplicated and the VisDrone originals are never modified.
 
-### Download status
+### Download and preparation status — ✅ COMPLETE
 
 | Component | Status |
 |---|---|
-| RefDrone annotations (3 JSON) | ✅ **downloaded** |
-| RefDrone paper | ✅ **downloaded** |
-| RefDrone repo | ✅ **cloned** |
-| NGDINO checkpoints (T, B) | ✅ **downloaded** |
-| VisDrone2019-DET train/val/test-dev | ❌ **manual browser download required** |
-| `refdrone/images/all_image/` | ⏳ blocked on VisDrone |
+| RefDrone annotations (3 JSON) | ✅ downloaded (18.6 MB) |
+| RefDrone paper | ✅ downloaded |
+| RefDrone repo | ✅ cloned |
+| NGDINO checkpoints (T, B) | ✅ downloaded |
+| VisDrone2019-DET **train** | ✅ 6,471 images — `sha256 86a77eba9313…` |
+| VisDrone2019-DET **val** | ✅ 548 images — `sha256 abeea063037e…` |
+| VisDrone2019-DET **test-dev** | ✅ 1,610 images — `sha256 78b0c5078a14…` |
+| VisDrone2019-DET test-challenge | ⛔ **not downloaded — confirmed unnecessary** |
+| `refdrone/images/all_image/` | ✅ **8,536 / 8,536 linked, 0 missing** |
 
-**Missing component: VisDrone imagery.** The official VisDrone repo distributes
-only via Google Drive / BaiduYun, and the Drive endpoint returns an HTML
-virus-scan interstitial rather than the ZIP. That is a manual-browser-access
-requirement and was **not bypassed**; no unofficial mirror (Kaggle, scraped
-archive) was substituted. → `datasets/visdrone2019_det/README.md`.
+`scripts/verify_refdrone.py` → **RESULT: OK** — every referenced image resolves,
+0 broken symlinks, 0 links escaping the VisDrone tree, 0 duplicated payloads,
+0 cross-split leakage.
+
+The archives had to be fetched **manually in a browser**: the official VisDrone
+repo distributes only via Google Drive / BaiduYun, and a plain GET against the
+Drive endpoint returns Google's virus-scan interstitial HTML rather than the ZIP
+— for the 0.07 GB val archive as well as the 1.44 GB train archive, so size is
+not the trigger. That requirement was **documented, not bypassed** with a scraped
+confirm-token, and **no unofficial mirror** (Kaggle, `Voxel51/VisDrone2019-DET`,
+scraped archive) was substituted. Upstream publishes **no checksums**, so the
+SHA-256 values above were computed locally and are the reproducibility anchor
+from here on. → `datasets/visdrone2019_det/README.md`.
 
 ### License / usage restrictions — read before deploying
 
