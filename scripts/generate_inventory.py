@@ -101,6 +101,13 @@ def bib_escape(s: str) -> str:
     return s.replace("&", r"\&").replace("%", r"\%").replace("_", r"\_")
 
 
+def bib_authors(authors: str) -> str:
+    parts = [a.strip() for a in authors.split(",") if a.strip()]
+    parts = [p for p in parts if p.lower() not in ("and others", "et al", "et al.")]
+    trailing = " and others" if authors.strip().lower().endswith("and others") else ""
+    return bib_escape(" and ".join(parts)) + trailing
+
+
 def write_bib(papers: list[dict]) -> None:
     used: dict[str, int] = {}
     out: list[str] = [
@@ -121,7 +128,7 @@ def write_bib(papers: list[dict]) -> None:
             etype, vfield = "inproceedings", "booktitle"
         fields = [
             f"  title = {{{bib_escape(p['title'])}}}",
-            f"  author = {{{bib_escape(p.get('authors',''))}}}",
+            f"  author = {{{bib_authors(p.get('authors',''))}}}",
         ]
         if p.get("year"):
             fields.append(f"  year = {{{p['year']}}}")
