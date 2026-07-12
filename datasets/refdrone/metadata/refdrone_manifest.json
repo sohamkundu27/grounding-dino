@@ -1,0 +1,51 @@
+{
+  "generation_date": "2026-07-12T21:23:41.975529+00:00",
+  "source_dataset": "RefDrone (sunzc-sunny/RefDrone) over VisDrone2019-DET",
+  "linked_image_root": "datasets/refdrone/images/all_image",
+  "link_mode": "symlink (images stored once in datasets/visdrone2019_det/, never copied)",
+  "splits": [
+    {
+      "split": "train",
+      "annotation_file": "datasets/refdrone/annotations/RefDrone_train_mdetr.json",
+      "annotation_records": 13022,
+      "expression_count": 8910,
+      "unique_image_count": 6407,
+      "object_instance_count": 47557,
+      "matched_image_count": 0,
+      "missing_image_count": 6407,
+      "source_visdrone_split": "train"
+    },
+    {
+      "split": "val",
+      "annotation_file": "datasets/refdrone/annotations/RefDrone_val_mdetr.json",
+      "annotation_records": 1428,
+      "expression_count": 1124,
+      "unique_image_count": 534,
+      "object_instance_count": 4741,
+      "matched_image_count": 0,
+      "missing_image_count": 534,
+      "source_visdrone_split": "val"
+    },
+    {
+      "split": "test",
+      "annotation_file": "datasets/refdrone/annotations/RefDrone_test_mdetr.json",
+      "annotation_records": 3432,
+      "expression_count": 2686,
+      "unique_image_count": 1595,
+      "object_instance_count": 12105,
+      "matched_image_count": 0,
+      "missing_image_count": 1595,
+      "source_visdrone_split": "test-dev"
+    }
+  ],
+  "totals": {
+    "unique_images_referenced": 8536,
+    "annotation_records": 17882,
+    "object_instances": 64403,
+    "images_in_multiple_splits": 0,
+    "duplicate_image_references": 9346,
+    "matched_images": 0,
+    "missing_images": 8536
+  },
+  "notes": "Counts measured from the released annotation files, not quoted from the paper (whose abstract advertises larger figures than the release contains). RefDrone is image-based: it has no temporal annotations and cannot validate a tracking stage. Pixels are VisDrone-licensed (academic/non-commercial)."
+}

@@ -42,6 +42,43 @@ EXPECTED_SOURCE = {"train": "train", "val": "val", "test": "test-dev"}
 
 problems: list[str] = []
 warnings: list[str] = []
+WRITE_MANIFEST = False
+MANIFEST_OUT = REPO / "datasets" / "refdrone" / "metadata" / "refdrone_manifest.json"
+
+
+def write_manifest(report: dict) -> None:
+    """Emit the per-split dataset manifest from the numbers just measured."""
+    from datetime import datetime, timezone
+
+    splits = []
+    for split, s in report.get("splits", {}).items():
+        splits.append({
+            "split": split,
+            "annotation_file": s["annotation_file"],
+            "annotation_records": s["annotation_records"],
+            "expression_count": s["unique_expressions"],
+            "unique_image_count": s["unique_images"],
+            "object_instance_count": s["object_instances"],
+            "matched_image_count": s.get("matched_images", 0),
+            "missing_image_count": s.get("missing_images", s["unique_images"]),
+            "source_visdrone_split": s["expected_visdrone_split"],
+        })
+    MANIFEST_OUT.parent.mkdir(parents=True, exist_ok=True)
+    MANIFEST_OUT.write_text(json.dumps({
+        "generation_date": datetime.now(timezone.utc).isoformat(),
+        "source_dataset": "RefDrone (sunzc-sunny/RefDrone) over VisDrone2019-DET",
+        "linked_image_root": str(IMAGES.relative_to(REPO)),
+        "link_mode": "symlink (images stored once in datasets/visdrone2019_det/, never copied)",
+        "splits": splits,
+        "totals": report.get("totals", {}),
+        "notes": (
+            "Counts measured from the released annotation files, not quoted from the "
+            "paper (whose abstract advertises larger figures than the release contains). "
+            "RefDrone is image-based: it has no temporal annotations and cannot validate "
+            "a tracking stage. Pixels are VisDrone-licensed (academic/non-commercial)."
+        ),
+    }, indent=2) + "\n")
+    print(f"wrote {MANIFEST_OUT.relative_to(REPO)}")
 
 
 def fail(msg: str) -> None:
@@ -55,7 +92,11 @@ def warn(msg: str) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--json", action="store_true", help="emit JSON instead of a table")
+    ap.add_argument("--write-manifest", action="store_true",
+                    help="also write datasets/refdrone/metadata/refdrone_manifest.json")
     args = ap.parse_args()
+    global WRITE_MANIFEST
+    WRITE_MANIFEST = args.write_manifest
 
     report: dict = {"splits": {}, "totals": {}}
 
@@ -197,6 +238,8 @@ def main() -> int:
 
 
 def emit(report: dict, as_json: bool, incomplete: bool = False) -> int:
+    if WRITE_MANIFEST and report.get("splits"):
+        write_manifest(report)
     if as_json:
         report["problems"] = problems
         report["warnings"] = warnings
