@@ -10,3 +10,9 @@
 [submodule "third_party/mm_grounding_dino"]
 	path = third_party/mm_grounding_dino
 	url = https://github.com/open-mmlab/mmdetection.git
+[submodule "third_party/pet_dino"]
+	path = third_party/pet_dino
+	url = https://github.com/fuweifuvtoo/PET_DINO.git
+[submodule "third_party/refdrone"]
+	path = third_party/refdrone
+	url = https://github.com/sunzc-sunny/refdrone.git
