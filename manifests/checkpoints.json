@@ -1,0 +1,250 @@
+{
+  "_comment": "Checkpoint manifest. 'expected_size_bytes' is taken from the official host (GitHub release API / HF blob API) BEFORE downloading. 'actual_size_bytes' and 'sha256' are filled in by scripts/download_checkpoints.py after a verified download. Weight licenses are tracked separately from repository licenses -- see docs/LICENSES.md.",
+  "checkpoints": [
+    {
+      "model": "grounding_dino",
+      "checkpoint": "groundingdino_swint_ogc.pth",
+      "backbone": "Swin-T",
+      "official_url": "https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth",
+      "local_path": "checkpoints/grounding_dino/groundingdino_swint_ogc.pth",
+      "expected_size_bytes": 693997677,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (weights released with the repo; trained on O365/GoldG/Cap4M)",
+      "download_status": "pending",
+      "notes": "Primary Grounding DINO checkpoint. Official GitHub release v0.1.0-alpha. Config: groundingdino/config/GroundingDINO_SwinT_OGC.py. Shared with Grounded-SAM and Grounded-SAM-2 (do not duplicate)."
+    },
+    {
+      "model": "grounding_dino",
+      "checkpoint": "groundingdino_swinb_cogcoor.pth",
+      "backbone": "Swin-B",
+      "official_url": "https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha2/groundingdino_swinb_cogcoor.pth",
+      "local_path": "checkpoints/grounding_dino/groundingdino_swinb_cogcoor.pth",
+      "expected_size_bytes": 938057991,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (weights released with the repo)",
+      "download_status": "pending",
+      "notes": "Official Swin-B checkpoint, publicly downloadable. Config: groundingdino/config/GroundingDINO_SwinB_cfg.py."
+    },
+    {
+      "model": "mm_grounding_dino",
+      "checkpoint": "grounding_dino_swin-t_pretrain_obj365_goldg_v3det_20231218_095741-e316e297.pth",
+      "backbone": "Swin-T",
+      "official_url": "https://download.openmmlab.com/mmdetection/v3.0/mm_grounding_dino/grounding_dino_swin-t_pretrain_obj365_goldg_v3det/grounding_dino_swin-t_pretrain_obj365_goldg_v3det_20231218_095741-e316e297.pth",
+      "local_path": "checkpoints/mm_grounding_dino/grounding_dino_swin-t_pretrain_obj365_goldg_v3det_20231218_095741-e316e297.pth",
+      "expected_size_bytes": 996512019,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (OpenMMLab model zoo)",
+      "download_status": "pending",
+      "notes": "Canonical MM-GDINO Swin-T. Also the pretrained init required by PET-DINO (README 'Pretrained Weights' table)."
+    },
+    {
+      "model": "mm_grounding_dino",
+      "checkpoint": "grounding_dino_swin-t_pretrain_obj365_goldg_grit9m_v3det_20231204_095047-b448804b.pth",
+      "backbone": "Swin-T",
+      "official_url": "https://download.openmmlab.com/mmdetection/v3.0/mm_grounding_dino/grounding_dino_swin-t_pretrain_obj365_goldg_grit9m_v3det/grounding_dino_swin-t_pretrain_obj365_goldg_grit9m_v3det_20231204_095047-b448804b.pth",
+      "local_path": "checkpoints/mm_grounding_dino/grounding_dino_swin-t_pretrain_obj365_goldg_grit9m_v3det_20231204_095047-b448804b.pth",
+      "expected_size_bytes": 1093815743,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (OpenMMLab model zoo)",
+      "download_status": "pending",
+      "notes": "Best-performing MM-GDINO Swin-T (O365+GoldG+GRIT9M+V3Det). Strongest tiny-backbone zero-shot candidate for the drone use case."
+    },
+    {
+      "model": "mm_grounding_dino",
+      "checkpoint": "grounding_dino_swin-b_pretrain_all-f9818a7c.pth",
+      "backbone": "Swin-B",
+      "official_url": "https://download.openmmlab.com/mmdetection/v3.0/mm_grounding_dino/grounding_dino_swin-b_pretrain_all/grounding_dino_swin-b_pretrain_all-f9818a7c.pth",
+      "local_path": "checkpoints/mm_grounding_dino/grounding_dino_swin-b_pretrain_all-f9818a7c.pth",
+      "expected_size_bytes": 1127260938,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (OpenMMLab model zoo)",
+      "download_status": "pending",
+      "notes": "MM-GDINO Swin-B trained on the full data mixture."
+    },
+    {
+      "model": "mm_grounding_dino",
+      "checkpoint": "grounding_dino_swin-l_pretrain_all-56d69e78.pth",
+      "backbone": "Swin-L",
+      "official_url": "https://download.openmmlab.com/mmdetection/v3.0/mm_grounding_dino/grounding_dino_swin-l_pretrain_all/grounding_dino_swin-l_pretrain_all-56d69e78.pth",
+      "local_path": "checkpoints/mm_grounding_dino/grounding_dino_swin-l_pretrain_all-56d69e78.pth",
+      "expected_size_bytes": 1549406424,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (OpenMMLab model zoo)",
+      "download_status": "pending",
+      "notes": "Highest-accuracy MM-GDINO. Accuracy ceiling reference; too heavy for real-time Jetson detection."
+    },
+    {
+      "model": "sam",
+      "checkpoint": "sam_vit_h_4b8939.pth",
+      "backbone": "ViT-H",
+      "official_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
+      "local_path": "checkpoints/sam/sam_vit_h_4b8939.pth",
+      "expected_size_bytes": 2564550879,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (Meta, Segment Anything)",
+      "download_status": "pending",
+      "notes": "Default SAM checkpoint used by Grounded-Segment-Anything demos."
+    },
+    {
+      "model": "sam",
+      "checkpoint": "sam_vit_b_01ec64.pth",
+      "backbone": "ViT-B",
+      "official_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
+      "local_path": "checkpoints/sam/sam_vit_b_01ec64.pth",
+      "expected_size_bytes": 375042383,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (Meta, Segment Anything)",
+      "download_status": "pending",
+      "notes": "Smallest SAM v1 encoder; kept as the edge/Jetson-viable SAM v1 option."
+    },
+    {
+      "model": "sam2",
+      "checkpoint": "sam2.1_hiera_large.pt",
+      "backbone": "Hiera-L",
+      "official_url": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt",
+      "local_path": "checkpoints/sam2/sam2.1_hiera_large.pt",
+      "expected_size_bytes": 898083611,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (Meta, SAM 2)",
+      "download_status": "pending",
+      "notes": "SAM 2.1 (092824 release) as pinned by Grounded-SAM-2/checkpoints/download_ckpts.sh."
+    },
+    {
+      "model": "sam2",
+      "checkpoint": "sam2.1_hiera_base_plus.pt",
+      "backbone": "Hiera-B+",
+      "official_url": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_base_plus.pt",
+      "local_path": "checkpoints/sam2/sam2.1_hiera_base_plus.pt",
+      "expected_size_bytes": 323606802,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (Meta, SAM 2)",
+      "download_status": "pending",
+      "notes": "SAM 2.1 base-plus."
+    },
+    {
+      "model": "sam2",
+      "checkpoint": "sam2.1_hiera_small.pt",
+      "backbone": "Hiera-S",
+      "official_url": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt",
+      "local_path": "checkpoints/sam2/sam2.1_hiera_small.pt",
+      "expected_size_bytes": 184416285,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (Meta, SAM 2)",
+      "download_status": "pending",
+      "notes": "SAM 2.1 small. Strong candidate for the 10+ Hz tracking stage on Jetson Orin."
+    },
+    {
+      "model": "sam2",
+      "checkpoint": "sam2.1_hiera_tiny.pt",
+      "backbone": "Hiera-T",
+      "official_url": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt",
+      "local_path": "checkpoints/sam2/sam2.1_hiera_tiny.pt",
+      "expected_size_bytes": 156008466,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (Meta, SAM 2)",
+      "download_status": "pending",
+      "notes": "SAM 2.1 tiny. Fastest video-tracking option; primary Jetson tracking candidate."
+    },
+    {
+      "model": "pet_dino",
+      "checkpoint": "pet_dino_swin-t_8xb4_12e_obj365.pth",
+      "backbone": "Swin-T",
+      "official_url": "https://huggingface.co/fuweifu/PET-DINO/resolve/main/pet_dino_swin-t_8xb4_12e_obj365.pth",
+      "local_path": "checkpoints/pet_dino/pet_dino_swin-t_8xb4_12e_obj365.pth",
+      "expected_size_bytes": 2309043797,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "Apache-2.0 (author HF repo 'fuweifu', card license apache-2.0)",
+      "download_status": "pending",
+      "notes": "Only checkpoint published by the authors. Config: configs/pet_dino/pet_dino_swin-t_8xb4_12e_obj365.py. Supports BOTH text and visual prompts. Swin-L config exists in-repo but NO Swin-L weight is published."
+    },
+    {
+      "model": "refdrone_ngdino",
+      "checkpoint": "NGDINO_T.pth",
+      "backbone": "Swin-T",
+      "official_url": "https://huggingface.co/sunzc-sunny/ngdino/resolve/main/NGDINO_T.pth",
+      "local_path": "checkpoints/refdrone_ngdino/NGDINO_T.pth",
+      "expected_size_bytes": 2110656821,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "CC BY 4.0 (per RefDrone repo LICENSE statement)",
+      "download_status": "pending",
+      "notes": "Dataset-associated reference model, NOT one of the five primary systems. Config: configs/NGDINO/ngdino_swin-t_refdrone.py (5-epoch)."
+    },
+    {
+      "model": "refdrone_ngdino",
+      "checkpoint": "NGDINO_B.pth",
+      "backbone": "Swin-B",
+      "official_url": "https://huggingface.co/sunzc-sunny/ngdino/resolve/main/NGDINO_B.pth",
+      "local_path": "checkpoints/refdrone_ngdino/NGDINO_B.pth",
+      "expected_size_bytes": 2835406585,
+      "actual_size_bytes": null,
+      "sha256": null,
+      "license": "CC BY 4.0 (per RefDrone repo LICENSE statement)",
+      "download_status": "pending",
+      "notes": "Config: configs/NGDINO/ngdino_swin-b_refdrone.py (5-epoch)."
+    }
+  ],
+  "available_but_not_downloaded": [
+    {
+      "model": "refdrone_ngdino",
+      "checkpoints": [
+        "NGDINO_T_e50.pth (2116282741 B)",
+        "NGDINO_B_e50.pth (2841016633 B)",
+        "grounding_dino_swin-t_numbranch_pretrain.pth (1097095212 B)",
+        "grounding_dino_swin-b_numbranch_pretrain.pth (1122140101 B)",
+        "grounding_dino_swin-t_numbranch_pretrain_grefcoco.pth (1097093314 B)",
+        "wide_resnet_color_model_99_89.80.pth (500167261 B)"
+      ],
+      "official_url": "https://huggingface.co/sunzc-sunny/ngdino",
+      "reason": "Public and ungated, but these are 50-epoch variants, training inits, and an auxiliary colour classifier. Deliberately skipped to keep checkpoints/ curated (~10.8 GB avoided). Fetch on demand with scripts/download_checkpoints.py after adding to the manifest."
+    },
+    {
+      "model": "mm_grounding_dino",
+      "checkpoints": [
+        "grounding_dino_swin-t_pretrain_obj365_goldg (baseline)",
+        "grounding_dino_swin-t_pretrain_obj365_goldg_grit9m",
+        "grounding_dino_swin-b_pretrain_obj365_goldg_v3det",
+        "grounding_dino_swin-l_pretrain_obj365_goldg",
+        "~40 downstream fine-tunes (COCO / LVIS / ODinW / RTTS / RUOD / brain_tumor / cityscapes / dod / flickr30k ...)"
+      ],
+      "official_url": "third_party/mm_grounding_dino/configs/mm_grounding_dino/metafile.yml",
+      "reason": "The full MM-GDINO model zoo is large. The four pretrain checkpoints in the manifest span the Swin-T/B/L range. Every remaining URL is recorded upstream in metafile.yml."
+    },
+    {
+      "model": "sam",
+      "checkpoints": [
+        "sam_vit_l_0b3195.pth (1249524607 B)"
+      ],
+      "official_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
+      "reason": "Mid-size SAM v1. ViT-H (default) and ViT-B (edge) already bracket the range."
+    },
+    {
+      "model": "sam2",
+      "checkpoints": [
+        "sam2_hiera_{tiny,small,base_plus,large}.pt (072824 release)"
+      ],
+      "official_url": "https://dl.fbaipublicfiles.com/segment_anything_2/072824/",
+      "reason": "Superseded by SAM 2.1 (092824). Upstream download_ckpts.sh has these commented out."
+    }
+  ],
+  "api_only_not_downloadable": [
+    {
+      "model": "Grounding DINO 1.5 / 1.6 Pro & Edge, DINO-X",
+      "official_url": "https://algos.deepdataspace.com/en (DDS cloud API)",
+      "reason": "Referenced by Grounded-SAM-2 demos (grounded_sam2_gd1.5_demo.py, dinox_demo.py) but served ONLY through the DeepDataSpace cloud API and gated by an API token. NO local weights are published. Not downloaded; no API key obtained; no image sent anywhere. Do not treat these as local checkpoints."
+    }
+  ]
+}
