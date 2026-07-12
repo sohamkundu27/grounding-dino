@@ -431,10 +431,10 @@
       "official_url": "https://arxiv.org/abs/2502.00392",
       "pdf_url": "https://arxiv.org/pdf/2502.00392",
       "local_path": "papers/domain_adaptations/2025_Sun_RefDrone.pdf",
-      "sha256": "",
+      "sha256": "263c15709d354c0ac4e24ada166d700f976cea1b2e39f12dc8ecb9238534dc36",
       "primary_or_supporting": "related",
       "local_runnable_system": "",
-      "download_status": "pending",
+      "download_status": "downloaded",
       "verification_status": "verified",
       "notes": "Aerial/drone referring-expression benchmark; its NGDINO baseline is a Grounding DINO derivative. Directly relevant to the drone target-finding application. Also tracked in manifests/papers.json."
     },
