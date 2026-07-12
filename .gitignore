@@ -30,6 +30,11 @@ datasets/**
 !datasets/**/
 !datasets/**/.gitkeep
 !datasets/**/*.md
+# Small derived metadata (counts, image manifests) IS tracked: it is text, it is
+# what makes the dataset state inspectable without shipping the payload, and it
+# lets anyone see exactly which VisDrone images RefDrone needs. Image/archive
+# payloads stay ignored by the rules above and by *.zip / *.part below.
+!datasets/**/metadata/*.json
 
 # --- Papers ---------------------------------------------------------------
 # The curated literature collection under papers/ IS committed (PDFs + notes).

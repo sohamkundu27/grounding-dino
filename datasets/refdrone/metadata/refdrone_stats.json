@@ -1,0 +1,23 @@
+{
+  "train": {
+    "entries": 13022,
+    "unique_images": 6407,
+    "expressions": 8910,
+    "annotations": 47557,
+    "categories": 11
+  },
+  "val": {
+    "entries": 1428,
+    "unique_images": 534,
+    "expressions": 1124,
+    "annotations": 4741,
+    "categories": 11
+  },
+  "test": {
+    "entries": 3432,
+    "unique_images": 1595,
+    "expressions": 2686,
+    "annotations": 12105,
+    "categories": 11
+  }
+}
