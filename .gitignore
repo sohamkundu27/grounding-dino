@@ -1,9 +1,16 @@
 # ---------------------------------------------------------------------------
 # Repository hygiene for the open-vocabulary detection / tracking research repo.
 #
-# Tracked:   docs, scripts, manifests, checksums, environment notes, READMEs,
-#            directory placeholders, upstream submodule pointers (commit SHAs).
-# Untracked: model weights, datasets, papers (PDFs), inference outputs, caches.
+# Tracked:   docs, scripts, manifests, metadata, notes, checksums, environment
+#            notes, READMEs, directory placeholders, upstream submodule pointers
+#            (commit SHAs), AND the curated literature-collection paper PDFs.
+# Untracked: model weights, datasets, inference outputs, caches.
+#
+# NOTE: The paper PDFs under papers/ are intentionally COMMITTED as part of the
+# curated Grounding DINO literature collection (they are small, redistributable
+# academic PDFs from official sources such as arXiv / CVF). This is a deliberate
+# change from the earlier "PDFs by-link only" policy; see
+# docs/organization_log.md. Model weights and datasets remain untracked.
 # ---------------------------------------------------------------------------
 
 # --- Upstream source ------------------------------------------------------
@@ -25,11 +32,11 @@ datasets/**
 !datasets/**/*.md
 
 # --- Papers ---------------------------------------------------------------
-# PDFs are redistributable-by-link, not by commit. Keep the layout + notes.
-papers/**
-!papers/**/
-!papers/**/.gitkeep
-!papers/**/*.md
+# The curated literature collection under papers/ IS committed (PDFs + notes).
+# Only guard against accidental junk landing there.
+papers/**/*.part
+papers/**/*.tmp
+papers/**/*.crdownload
 
 # --- Inference / experiment outputs ---------------------------------------
 outputs/**
@@ -60,6 +67,11 @@ __pycache__/
 venv/
 .env
 *.egg-info/
+*.tmp
+
+# --- Editors --------------------------------------------------------------
+.idea/
+.vscode/
 
 # --- OS -------------------------------------------------------------------
 .DS_Store
