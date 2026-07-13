@@ -161,3 +161,37 @@ target, no amount of segmentation recovers it.
   └──────────────────────┘        │              track IDs)      │
                                   └──────────────────────────────┘
 ```
+
+## Recommended testing order
+
+1. **Grounding DINO 1.0**
+2. **MM-Grounding-DINO**
+3. **PET-DINO**
+4. **Grounded Segment Anything**
+5. **Grounded SAM 2**
+
+The logic is cheapest-and-most-decisive first.
+
+**Steps 1–3 — compare the box-only detectors.** Same images, same prompts, same
+thresholds, one variable. This is the comparison that actually matters, because
+whichever detector wins is the one both pipelines will end up wrapping. It is
+also the cheapest: no segmentation, no video, no tracking state. Answer the
+fundamental question here — *can any of these resolve "the person in the red
+shirt" from a drone's altitude at all?* If none can, nothing downstream saves the
+project, and you have found that out in days rather than months.
+
+**Step 4 — measure the segmentation overhead.** Add SAM to the winning detector
+and ask one narrow question: do masks localise an aerial target meaningfully
+better than boxes, and what does that cost per frame? A perfectly good outcome is
+"no, and it costs 400 ms" — that removes a whole branch from the plan.
+
+**Step 5 — test the full detector-plus-tracker pipeline.** Only now bring in
+video and state. This is the most expensive to set up and the hardest to
+interpret, so it goes last — but it is also where the **10+ Hz requirement** is
+either met or not. Everything before it is preparation for this measurement.
+
+> ⚠️ **Steps 1–4 can be scored on RefDrone. Step 5 cannot.** RefDrone is
+> image-based — no temporal annotations, no track IDs, no video. Evaluating
+> detection-plus-tracking needs a separate video source (VisDrone-VID/-MOT, or
+> in-house drone footage). Budget for that; a strong RefDrone result says nothing
+> about whether the tracker holds a target.
