@@ -81,3 +81,20 @@ venv/
 # --- OS -------------------------------------------------------------------
 .DS_Store
 Thumbs.db
+
+# --- Grounded SAM 2 local evaluation (experiments/) ---------------------------
+# Generated outputs and environments are never committed; scripts, configs,
+# small JSON/CSV results and the summary ARE.
+experiments/**/outputs/**
+!experiments/**/outputs/**/.gitkeep
+experiments/**/inputs/**
+!experiments/**/inputs/**/.gitkeep
+.venv-grounded-sam2/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.npy
+*.npz
+build/
+*.so
