@@ -27,6 +27,16 @@ repository.**
    `third_party/`, `datasets/`): inventories, dependency notes and pinned upstream
    source for five locally runnable systems — for the drone application above.
 
+## Production candidate literature
+
+**→ [`production/README.md`](production/README.md)**
+
+`production/` is the one clean place to see the **five locally runnable systems
+selected for evaluation** — their primary papers, official repositories, whether
+each is a detector or a pipeline, local code/weight availability, and why each
+matters for the drone project. Papers and reference documentation only; the PDFs
+are symlinks to the canonical copies under `papers/`, so nothing is duplicated.
+
 ## How the papers are organized
 
 Each paper is stored in **exactly one** folder (no duplicate PDFs; relationships
