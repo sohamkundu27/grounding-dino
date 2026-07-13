@@ -35,7 +35,8 @@ repository.**
 selected for evaluation** — their primary papers, official repositories, whether
 each is a detector or a pipeline, local code/weight availability, and why each
 matters for the drone project. Papers and reference documentation only; the PDFs
-are symlinks to the canonical copies under `papers/`, so nothing is duplicated.
+are committed directly there so GitHub can preview them, and are byte-identical
+copies of the canonical files under `papers/`.
 
 ## How the papers are organized
 

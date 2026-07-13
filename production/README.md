@@ -15,8 +15,10 @@ assets. Those live elsewhere in the repository:
 | Dependency notes per system | [`../environments/`](../environments/) |
 | Wider literature collection | [`../papers/`](../papers/) |
 
-The PDFs here are **relative symlinks** to the canonical copies under
-[`../papers/`](../papers/) — one payload each, no duplicates. Verify with
+The PDFs here are **real files**, committed directly so GitHub can preview and
+download them (a symlinked blob renders as a path string, not a document). Each is
+a byte-identical copy of the canonical PDF under [`../papers/`](../papers/), which
+stays where it is. Verify with
 `sha256sum -c production/metadata/checksums.sha256`.
 
 > Nothing has been run. No inference, no training, no benchmarks. Everything below

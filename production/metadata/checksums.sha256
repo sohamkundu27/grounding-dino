@@ -1,13 +1,19 @@
 # SHA-256 for every PDF under production/papers/.
-# These are RELATIVE SYMLINKS to canonical PDFs elsewhere in the repo, so the
-# checksums below are of the resolved target -- there is no duplicate payload.
+# These are REAL PDF FILES (not symlinks): GitHub cannot preview or download a
+# symlinked blob, so the bytes are committed here directly. Each is a byte-identical
+# copy of the canonical PDF noted below, which remains in place under papers/.
 # Verify from the repo root with:  sha256sum -c production/metadata/checksums.sha256
 #
-# production/papers/01_grounding_dino/2023_Liu_Grounding_DINO.pdf  ->  papers/locally_runnable_systems/01_grounding_dino/2023_Liu_Grounding_DINO.pdf
-# production/papers/02_mm_grounding_dino/2024_Zhao_MM_Grounding_DINO.pdf  ->  papers/locally_runnable_systems/02_mm_grounding_dino/2024_Zhao_MM_Grounding_DINO.pdf
-# production/papers/03_grounded_sam/2024_Ren_Grounded_SAM.pdf  ->  papers/locally_runnable_systems/03_grounded_sam/2024_Ren_Grounded_SAM.pdf
-# production/papers/04_grounded_sam_2/2024_Ravi_SAM_2.pdf  ->  papers/core_foundations/2024_Ravi_SAM_2.pdf
-# production/papers/05_pet_dino/2026_Fu_PET_DINO.pdf  ->  papers/locally_runnable_systems/05_pet_dino/2026_Fu_PET_DINO.pdf
+# production/papers/01_grounding_dino/2023_Liu_Grounding_DINO.pdf
+#     canonical copy: papers/locally_runnable_systems/01_grounding_dino/2023_Liu_Grounding_DINO.pdf
+# production/papers/02_mm_grounding_dino/2024_Zhao_MM_Grounding_DINO.pdf
+#     canonical copy: papers/locally_runnable_systems/02_mm_grounding_dino/2024_Zhao_MM_Grounding_DINO.pdf
+# production/papers/03_grounded_sam/2024_Ren_Grounded_SAM.pdf
+#     canonical copy: papers/locally_runnable_systems/03_grounded_sam/2024_Ren_Grounded_SAM.pdf
+# production/papers/04_grounded_sam_2/2024_Ravi_SAM_2.pdf
+#     canonical copy: papers/core_foundations/2024_Ravi_SAM_2.pdf
+# production/papers/05_pet_dino/2026_Fu_PET_DINO.pdf
+#     canonical copy: papers/locally_runnable_systems/05_pet_dino/2026_Fu_PET_DINO.pdf
 
 ba1c64ec2ac4fedeb50b269eadc994456a8428dbe64a8dba2673f22df0fa20b3  production/papers/01_grounding_dino/2023_Liu_Grounding_DINO.pdf
 e42cf1b25cefaf3706ff277f78e24ca771815f65a23f2c7b9ae39972892520e5  production/papers/02_mm_grounding_dino/2024_Zhao_MM_Grounding_DINO.pdf
