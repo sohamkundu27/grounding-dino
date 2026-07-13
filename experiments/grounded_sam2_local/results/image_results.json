@@ -5,13 +5,98 @@
     "box_threshold": 0.35,
     "text_threshold": 0.25
   },
-  "model_load_ms": 2249.0,
+  "model_load_ms": 2236.3,
   "gpu_memory": {
-    "peak_allocated_mb": 1441.4,
+    "peak_allocated_mb": 1433.1,
     "peak_reserved_mb": 1932.0
   },
   "device": "NVIDIA GeForce RTX 3080",
   "results": [
+    {
+      "image": "datasets/refdrone/images/all_image/0000001_02999_d_0000005.jpg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "prompt": "car",
+      "sam2_size": "tiny",
+      "n_detections": 7,
+      "scores": [
+        0.6357,
+        0.6736,
+        0.4658,
+        0.6336,
+        0.3759,
+        0.3562,
+        0.3704
+      ],
+      "phrases": [
+        "car",
+        "car",
+        "car",
+        "car",
+        "car",
+        "car",
+        "car"
+      ],
+      "boxes_xyxy": [
+        [
+          948.7,
+          591.3,
+          1011.4,
+          686.7
+        ],
+        [
+          878.6,
+          705.3,
+          942.1,
+          815.5
+        ],
+        [
+          607.3,
+          362.7,
+          706.3,
+          413.4
+        ],
+        [
+          868.3,
+          570.5,
+          925.7,
+          665.6
+        ],
+        [
+          750.7,
+          322.7,
+          827.1,
+          378.7
+        ],
+        [
+          785.3,
+          184.4,
+          809.9,
+          221.6
+        ],
+        [
+          703.7,
+          344.4,
+          802.6,
+          409.7
+        ]
+      ],
+      "gd_latency_ms": 362.3,
+      "sam2_latency_ms": 154.3,
+      "total_latency_ms": 516.6,
+      "mask_pixels": [
+        4863,
+        4362,
+        3922,
+        4435,
+        2589,
+        806,
+        3773
+      ],
+      "visualisation": "experiments/grounded_sam2_local/outputs/images/smoke_0000001_02999_d_0000005_car.png"
+    },
     {
       "image": "datasets/refdrone/images/all_image/0000001_02999_d_0000005.jpg",
       "resolution": [
@@ -131,110 +216,25 @@
           282.9
         ]
       ],
-      "gd_latency_ms": 672.9,
-      "sam2_latency_ms": 115.8,
-      "total_latency_ms": 788.7,
+      "gd_latency_ms": 100.2,
+      "sam2_latency_ms": 65.1,
+      "total_latency_ms": 165.2,
       "mask_pixels": [
         433,
-        316,
-        444,
+        315,
+        443,
         400,
-        650,
+        652,
         504,
-        248,
-        386,
-        227,
-        344,
-        438,
-        309,
-        329
+        247,
+        385,
+        223,
+        347,
+        440,
+        308,
+        331
       ],
       "visualisation": "experiments/grounded_sam2_local/outputs/images/smoke_0000001_02999_d_0000005_person.png"
-    },
-    {
-      "image": "datasets/refdrone/images/all_image/0000001_02999_d_0000005.jpg",
-      "resolution": [
-        1920,
-        1080
-      ],
-      "prompt": "car",
-      "sam2_size": "tiny",
-      "n_detections": 7,
-      "scores": [
-        0.6357,
-        0.6736,
-        0.4658,
-        0.6336,
-        0.3759,
-        0.3562,
-        0.3704
-      ],
-      "phrases": [
-        "car",
-        "car",
-        "car",
-        "car",
-        "car",
-        "car",
-        "car"
-      ],
-      "boxes_xyxy": [
-        [
-          948.7,
-          591.3,
-          1011.4,
-          686.7
-        ],
-        [
-          878.6,
-          705.3,
-          942.1,
-          815.5
-        ],
-        [
-          607.3,
-          362.7,
-          706.3,
-          413.4
-        ],
-        [
-          868.3,
-          570.5,
-          925.7,
-          665.6
-        ],
-        [
-          750.7,
-          322.7,
-          827.1,
-          378.7
-        ],
-        [
-          785.3,
-          184.4,
-          809.9,
-          221.6
-        ],
-        [
-          703.7,
-          344.4,
-          802.6,
-          409.7
-        ]
-      ],
-      "gd_latency_ms": 110.5,
-      "sam2_latency_ms": 22.7,
-      "total_latency_ms": 133.2,
-      "mask_pixels": [
-        4868,
-        4357,
-        3925,
-        4440,
-        2590,
-        807,
-        3783
-      ],
-      "visualisation": "experiments/grounded_sam2_local/outputs/images/smoke_0000001_02999_d_0000005_car.png"
     }
   ]
 }

@@ -139,22 +139,35 @@ def gd_predict(model, image_path: Path, prompt: str, box_thr=0.35, text_thr=0.25
     return xyxy, logits.numpy().tolist(), phrases, times[0], (w, h)
 
 
-def sam2_masks(predictor, image_rgb, boxes_xyxy):
-    """SAM 2 image segmentation from boxes. Returns (masks, ms)."""
-    import numpy as np
+def sam2_masks(predictor, image_rgb, boxes_xyxy, split: bool = False):
+    """SAM 2 image segmentation from boxes. Returns (masks, ms[, breakdown]).
+
+    `ms` is the END-TO-END SAM 2 cost: image encode + mask decode.
+
+    set_image() is what runs the Hiera image backbone, and it is the dominant,
+    backbone-dependent stage. Timing only predict() measures the mask decoder,
+    which is nearly identical across Tiny/Small/Large and makes a bigger
+    checkpoint look as fast as a smaller one. Both stages are timed here; pass
+    split=True to get them separately.
+    """
     import torch
 
-    times: list[float] = []
-    predictor.set_image(image_rgb)
+    enc: list[float] = []
+    dec: list[float] = []
     with torch.autocast("cuda", dtype=torch.bfloat16):
-        with cuda_timer(times):
-            masks, scores, _ = predictor.predict(
+        with cuda_timer(enc):
+            predictor.set_image(image_rgb)          # Hiera image encoder
+        with cuda_timer(dec):
+            masks, scores, _ = predictor.predict(   # prompt encoder + mask decoder
                 point_coords=None, point_labels=None,
                 box=boxes_xyxy, multimask_output=False,
             )
     if masks.ndim == 4:
         masks = masks.squeeze(1)
-    return masks.astype(bool), times[0]
+    total = enc[0] + dec[0]
+    if split:
+        return masks.astype(bool), total, {"encode_ms": enc[0], "decode_ms": dec[0]}
+    return masks.astype(bool), total
 
 
 def gpu_mem_mb() -> dict:
