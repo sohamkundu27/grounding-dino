@@ -45,6 +45,32 @@ SAM2_CFGS = {
 
 FORBIDDEN = ("dds_cloudapi_sdk", "dinox", "dds_cloudapi")
 
+# Grounding DINO's text encoder calls transformers' from_pretrained("bert-base-uncased").
+# Even with the weights already in ~/.cache/huggingface, that REVALIDATES them against
+# huggingface.co on every load -- strace shows real outbound :443 connections to the HF
+# CDN. Nothing is uploaded, but the pipeline is not network-free by default, which is
+# fatal for an air-gapped target. Force offline before transformers is ever imported.
+# Escape hatch for first-time setup on a machine with no HF cache: GSAM2_ALLOW_NETWORK=1.
+HF_CACHE = Path(os.environ.get("HF_HOME", Path.home() / ".cache/huggingface"))
+BERT_CACHED = (HF_CACHE / "hub/models--bert-base-uncased").exists() or \
+              (HF_CACHE / "models--bert-base-uncased").exists()
+
+if os.environ.get("GSAM2_ALLOW_NETWORK") != "1":
+    for _v in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "HF_DATASETS_OFFLINE"):
+        os.environ.setdefault(_v, "1")
+    if not BERT_CACHED:
+        raise RuntimeError(
+            "bert-base-uncased is not in the local HuggingFace cache, and this adapter "
+            "runs offline by default, so Grounding DINO's text encoder cannot load.\n"
+            "Populate the cache ONCE on a networked machine with:\n"
+            "  GSAM2_ALLOW_NETWORK=1 python -c \"from transformers import BertModel, "
+            "BertTokenizer; BertModel.from_pretrained('bert-base-uncased'); "
+            "BertTokenizer.from_pretrained('bert-base-uncased')\"\n"
+            "then re-run offline. (Do NOT set GSAM2_ALLOW_NETWORK on an air-gapped target.)"
+        )
+
+OFFLINE_ENFORCED = os.environ.get("HF_HUB_OFFLINE") == "1"
+
 
 def assert_no_cloud_imports() -> None:
     """Fail loudly if any cloud-API module ever gets imported."""

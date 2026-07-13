@@ -101,6 +101,23 @@ def main() -> int:
             "repo": sh("git", "-C", str(REPO), "rev-parse", "HEAD"),
             "grounded_sam_2": sh("git", "-C", str(G.GSAM2), "rev-parse", "HEAD"),
         },
+        "network": {
+            "offline_enforced_by_adapter": G.OFFLINE_ENFORCED,
+            "bert_in_local_hf_cache": G.BERT_CACHED,
+            "bert_cache_dir": str(G.HF_CACHE),
+            "finding": (
+                "Grounding DINO's text encoder calls transformers from_pretrained("
+                "'bert-base-uncased'), which REVALIDATES the cached files against "
+                "huggingface.co on every load. strace -e trace=connect on an unguarded "
+                "run showed real outbound :443 connections to the HF CDN (CloudFront). "
+                "No imagery is uploaded -- it is a metadata fetch -- but the pipeline is "
+                "NOT network-free by default."
+            ),
+            "mitigation": "gsam2_local sets HF_HUB_OFFLINE/TRANSFORMERS_OFFLINE=1 at import, "
+                          "before transformers loads. Verified: zero AF_INET connect() "
+                          "syscalls, identical detections.",
+            "verification_method": "strace -f -e trace=connect on a full inference run",
+        },
         "local_only": {
             "cloud_sdk_installed": cloud_installed or None,
             "confirmed_no_cloud_packages": not cloud_installed,

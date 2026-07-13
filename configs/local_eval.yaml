@@ -1,0 +1,86 @@
+# Grounded SAM 2 — fully-local evaluation config (workstation, RTX 3080).
+#
+# Pipeline: text prompt -> Grounding DINO 1.0 (local) -> box -> SAM 2.1 (local) -> mask
+# No cloud API, no API key, no image upload. See `network:` below.
+
+pipeline:
+  detector: grounding_dino_1.0          # Swin-T + BERT-base, local weights
+  segmenter: sam2.1                     # Hiera, local weights
+  # Grounded SAM 2 is a PIPELINE, not a model: it chains the two above.
+  # It has no standalone paper and no joint training.
+
+entry_point:
+  adapter: experiments/grounded_sam2_local/scripts/gsam2_local.py
+  note: >
+    Lives OUTSIDE third_party/. No upstream submodule file is modified.
+    It wires up the same local code path as the upstream reference demo
+    `grounded_sam2_local_demo.py`.
+
+  # These upstream demos require the DDS cloud API and are NEVER used:
+  never_use:
+    - grounded_sam2_gd1.5_demo.py
+    - grounded_sam2_dinox_demo.py
+    - grounded_sam2_tracking_demo_with_gd1.5.py
+    - grounded_sam2_tracking_demo_with_continuous_id_gd1.5.py
+    - grounded_sam2_tracking_demo_custom_video_input_gd1.5.py
+    - grounded_sam2_tracking_demo_custom_video_input_dinox.py
+
+checkpoints:
+  grounding_dino: checkpoints/grounding_dino/groundingdino_swint_ogc.pth
+  sam2_tiny:      checkpoints/sam2/sam2.1_hiera_tiny.pt
+  sam2_small:     checkpoints/sam2/sam2.1_hiera_small.pt
+  text_encoder:   ~/.cache/huggingface  # bert-base-uncased, NOT in checkpoints/
+
+network:
+  offline_enforced: true
+  # gsam2_local.py sets HF_HUB_OFFLINE/TRANSFORMERS_OFFLINE=1 at import, before
+  # transformers is loaded. Without this, from_pretrained('bert-base-uncased')
+  # revalidates against huggingface.co on EVERY load -- confirmed by
+  # `strace -e trace=connect`. Nothing is uploaded, but it is not air-gap clean.
+  # Escape hatch to populate the BERT cache once: GSAM2_ALLOW_NETWORK=1
+  verified_zero_outbound_connections: true
+
+thresholds:
+  # Phase 1/3 (single clear object): tighter, to get one confident box.
+  smoke_and_video:  {box_threshold: 0.35, text_threshold: 0.25}
+  # Phase 2 (referring expressions): looser, or long expressions return nothing.
+  refdrone:         {box_threshold: 0.25, text_threshold: 0.20}
+
+phases:
+  1_smoke:
+    image: datasets/refdrone/images/all_image/0000001_02999_d_0000005.jpg
+    prompts: ["car", "person"]
+  2_refdrone:
+    seed: 1234
+    n_train: 30
+    n_val: 10
+    n_test: 10
+    scoring: >
+      Top-1 localization vs RefDrone GROUND-TRUTH BOXES (IoU>=0.5).
+      RefDrone has NO mask ground truth, so SAM 2 mask quality is assessed
+      visually and is deliberately NOT scored. No segmentation GT is invented.
+  3_video:
+    - {video: third_party/grounded_sam_2/assets/tracking_car.mp4, prompt: car,  frames: 200}
+    - {video: third_party/grounded_sam_2/assets/zebra.mp4,        prompt: zebra, frames: 200, start_frame: 20}
+    protocol: >
+      Grounding DINO runs ONCE on the first frame; SAM 2 propagates with no
+      re-detection. That isolates acquisition cost from steady-state tracking.
+  4_benchmark:
+    configs:
+      A: {detector: swin_t, sam2: tiny}
+      B: {detector: swin_t, sam2: small}
+    warmups: 3
+    measured_image_iters: 10
+    tracked_frames: 120
+    process_isolation: true   # each config in a fresh process; see benchmark_pipeline.py
+
+timing:
+  rule: >
+    torch.cuda.synchronize() on BOTH sides of every timed GPU region. CUDA is
+    asynchronous; without the syncs the kernel is still queued when the timer
+    stops and the number is fiction.
+  sam2_image_latency: >
+    Measured END-TO-END = set_image (Hiera image encoder) + predict (mask
+    decoder). Timing predict() alone measures only the decoder, which is nearly
+    backbone-independent and made SAM2.1-Small benchmark FASTER than Tiny.
+  cpu_fallback: forbidden   # gsam2_local.device() raises if CUDA is unavailable

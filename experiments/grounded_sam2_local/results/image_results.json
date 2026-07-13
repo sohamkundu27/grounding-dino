@@ -5,10 +5,10 @@
     "box_threshold": 0.35,
     "text_threshold": 0.25
   },
-  "model_load_ms": 2236.3,
+  "model_load_ms": 2807.5,
   "gpu_memory": {
-    "peak_allocated_mb": 1433.1,
-    "peak_reserved_mb": 1932.0
+    "peak_allocated_mb": 1337.6,
+    "peak_reserved_mb": 1930.0
   },
   "device": "NVIDIA GeForce RTX 3080",
   "results": [
@@ -83,9 +83,9 @@
           409.7
         ]
       ],
-      "gd_latency_ms": 362.3,
-      "sam2_latency_ms": 154.3,
-      "total_latency_ms": 516.6,
+      "gd_latency_ms": 401.8,
+      "sam2_latency_ms": 168.4,
+      "total_latency_ms": 570.2,
       "mask_pixels": [
         4863,
         4362,
@@ -95,146 +95,7 @@
         806,
         3773
       ],
-      "visualisation": "experiments/grounded_sam2_local/outputs/images/smoke_0000001_02999_d_0000005_car.png"
-    },
-    {
-      "image": "datasets/refdrone/images/all_image/0000001_02999_d_0000005.jpg",
-      "resolution": [
-        1920,
-        1080
-      ],
-      "prompt": "person",
-      "sam2_size": "tiny",
-      "n_detections": 13,
-      "scores": [
-        0.4831,
-        0.3723,
-        0.4262,
-        0.4633,
-        0.398,
-        0.4659,
-        0.392,
-        0.4183,
-        0.3589,
-        0.3546,
-        0.3552,
-        0.3635,
-        0.3827
-      ],
-      "phrases": [
-        "person",
-        "person",
-        "person",
-        "person",
-        "person",
-        "person",
-        "person",
-        "person",
-        "person",
-        "person",
-        "person",
-        "person",
-        "person"
-      ],
-      "boxes_xyxy": [
-        [
-          938.3,
-          393.0,
-          953.5,
-          431.3
-        ],
-        [
-          633.8,
-          213.2,
-          649.1,
-          245.1
-        ],
-        [
-          580.9,
-          450.6,
-          594.7,
-          488.8
-        ],
-        [
-          864.6,
-          316.1,
-          877.3,
-          353.1
-        ],
-        [
-          799.5,
-          513.4,
-          816.5,
-          553.1
-        ],
-        [
-          868.1,
-          405.5,
-          881.6,
-          446.7
-        ],
-        [
-          617.5,
-          213.7,
-          629.1,
-          244.4
-        ],
-        [
-          935.8,
-          245.1,
-          950.4,
-          276.3
-        ],
-        [
-          867.5,
-          49.1,
-          877.3,
-          73.3
-        ],
-        [
-          860.9,
-          201.7,
-          873.3,
-          234.6
-        ],
-        [
-          863.7,
-          250.7,
-          879.8,
-          287.6
-        ],
-        [
-          880.2,
-          218.7,
-          891.9,
-          248.8
-        ],
-        [
-          848.1,
-          248.4,
-          859.7,
-          282.9
-        ]
-      ],
-      "gd_latency_ms": 100.2,
-      "sam2_latency_ms": 65.1,
-      "total_latency_ms": 165.2,
-      "mask_pixels": [
-        433,
-        315,
-        443,
-        400,
-        652,
-        504,
-        247,
-        385,
-        223,
-        347,
-        440,
-        308,
-        331
-      ],
-      "visualisation": "experiments/grounded_sam2_local/outputs/images/smoke_0000001_02999_d_0000005_person.png"
+      "visualisation": "experiments/grounded_sam2_local/outputs/images/guard_0000001_02999_d_0000005_car.png"
     }
   ]
 }

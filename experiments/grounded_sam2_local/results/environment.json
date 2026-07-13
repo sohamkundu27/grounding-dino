@@ -20,7 +20,7 @@
     "torchvision": "0.20.1+cu124",
     "cuda_runtime_available": true,
     "cudnn": 90100,
-    "transformers": "5.13.1",
+    "transformers": "4.44.2",
     "numpy": "2.4.4",
     "opencv_python": "5.0.0.93",
     "supervision": "0.29.1",
@@ -41,8 +41,16 @@
     "sam2_small": "checkpoints/sam2/sam2.1_hiera_small.pt"
   },
   "commits": {
-    "repo": "e986eebcaf61f312eb8d6f41c61db9c6eff6ba63",
+    "repo": "e0e0cbf80a710bc6a5d08ba49e7386387b593f60",
     "grounded_sam_2": "b7a9c29f196edff0eb54dbe14588d7ae5e3dde28"
+  },
+  "network": {
+    "offline_enforced_by_adapter": true,
+    "bert_in_local_hf_cache": true,
+    "bert_cache_dir": "/home/soham/.cache/huggingface",
+    "finding": "Grounding DINO's text encoder calls transformers from_pretrained('bert-base-uncased'), which REVALIDATES the cached files against huggingface.co on every load. strace -e trace=connect on an unguarded run showed real outbound :443 connections to the HF CDN (CloudFront). No imagery is uploaded -- it is a metadata fetch -- but the pipeline is NOT network-free by default.",
+    "mitigation": "gsam2_local sets HF_HUB_OFFLINE/TRANSFORMERS_OFFLINE=1 at import, before transformers loads. Verified: zero AF_INET connect() syscalls, identical detections.",
+    "verification_method": "strace -f -e trace=connect on a full inference run"
   },
   "local_only": {
     "cloud_sdk_installed": null,
