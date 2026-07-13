@@ -195,3 +195,44 @@ either met or not. Everything before it is preparation for this measurement.
 > detection-plus-tracking needs a separate video source (VisDrone-VID/-MOT, or
 > in-house drone footage). Budget for that; a strong RefDrone result says nothing
 > about whether the tracker holds a target.
+
+## Drone-project relevance
+
+**The goal: zero-shot natural-language target acquisition.** An operator types
+*"person wearing a red shirt"* and the system finds them — with no task-specific
+training, no fine-tuning, and no predefined class list. Every system here is a
+candidate because they all accept free-form text at inference time. That property
+is the entire reason this shortlist exists.
+
+**Why it is hard from a drone.** Aerial imagery breaks the assumptions these
+models were trained under:
+
+- **Small objects.** A person from altitude is a few dozen pixels. These detectors were trained largely on web imagery where the subject fills the frame. Expect small-object performance to be the dominant failure mode — measure mAP **bucketed by object pixel area**, never in aggregate, or it will hide exactly the failure that matters.
+- **Attributes at low resolution.** "Red shirt" is the crux. Detecting *a person* is one problem; resolving *which* person by an attribute that may span 10 pixels is a much harder one, and it is unclear any of these can do it at operational altitude. **This is the single biggest open question, and it is cheap to answer — do it first.**
+- **Multi-target and no-target.** "Find the person in the red shirt" must be able to answer *"there isn't one."* None of the detectors here has an explicit no-target mechanism; they will tend to emit a box regardless. RefDrone deliberately includes these cases, which is what makes it valuable.
+
+**EO first; IR is unknown.** All evaluation starts on EO (visible-spectrum)
+imagery, which is what these models were trained on. **IR performance is genuinely
+uncertain** — the text-image alignment was learned from RGB, and there is no
+reason to assume "red shirt" means anything in thermal. Treat IR as an open
+research question, not a configuration flag.
+
+**The performance split.** Detection may run slowly; **tracking must sustain
+10+ Hz.** This asymmetry is what makes the detector-plus-tracker architecture
+attractive: acquire the target once with a heavy model, then hand off to a light
+one. It is also why *steps 1–3 and step 5 are measuring different things* — a
+slow detector is acceptable, a slow tracker is not.
+
+**Deployment: NVIDIA Jetson AGX Orin.** The realistic end state is TensorRT
+engines driven from C++, with no Python ML stack on the device. Two systems stand
+out:
+
+- **MM-Grounding-DINO may offer the cleanest production deployment path.** It is the only one of the five with first-party export tooling ([MMDeploy](https://github.com/open-mmlab/mmdeploy)), including a TensorRT plugin for the `MultiScaleDeformableAttention` op that otherwise blocks exporting this whole model family. If that plugin works, it is the strongest candidate almost regardless of the accuracy delta.
+- **Grounded SAM 2 is the closest system-level reference pipeline.** It is the only system that closes the loop from language to a sustained track, and `sam2.1_hiera_tiny` (149 MB) is genuinely plausible for real-time tracking on Orin.
+
+Practical gotcha worth knowing now: upstream `TORCH_CUDA_ARCH_LIST` values stop at
+**8.6**, and Orin is **SM 8.7** — that mismatch fails at *runtime*, not at build
+time, which is a miserable way to discover it.
+
+Per-system dependency, export-difficulty and Jetson notes:
+[`../environments/`](../environments/) and [`../docs/DEPENDENCY_NOTES.md`](../docs/DEPENDENCY_NOTES.md).
