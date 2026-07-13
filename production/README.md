@@ -116,3 +116,48 @@ describing the target, you can point at an example.
 - **Why test it:** visual prompting is a natural fit for a drone operator UI — *"track **that**"* is often more precise than any sentence, especially for targets with no clean verbal description. Its precomputed-embedding path is also deployment-friendly.
 - **Caveat:** only a **Swin-T** checkpoint is published; the in-repo Swin-L config has no released weight. It is a brand-new paper with no export tooling.
 - **Notes:** [`notes/pet_dino.md`](notes/pet_dino.md)
+
+## Important distinction
+
+These five are **not five of the same thing.** Three are models; two are
+assemblies of models. Comparing them as peers will produce nonsense.
+
+**Detector systems — new models, trained weights of their own:**
+
+| | |
+|---|---|
+| **Grounding DINO 1.0** | the original |
+| **MM-Grounding-DINO** | retrained, better data, real deployment path |
+| **PET-DINO** | adds visual prompts |
+
+All three take an image + a prompt and return **boxes**. They are directly
+comparable to each other: same input, same output, same metric.
+
+**Multi-model pipelines — no new model, no weights of their own:**
+
+| | |
+|---|---|
+| **Grounded SAM** | Grounding DINO → SAM. **Adds segmentation.** |
+| **Grounded SAM 2** | Grounding DINO → SAM 2. **Adds segmentation *and* video tracking.** |
+
+Both reuse a detector from the list above and bolt a segmenter onto it. Their
+detection quality is *inherited*, not improved — if the detector misses the
+target, no amount of segmentation recovers it.
+
+**What this means in practice:**
+
+- A pipeline's detection accuracy is whatever its underlying detector's is. **Do not "compare" Grounded SAM against Grounding DINO on detection** — they share the same detector; you would be measuring noise.
+- The pipelines are worth testing for what they **add**: masks (Grounded SAM) and track IDs (Grounded SAM 2). Those are the only axes on which they can win.
+- Choosing a detector and choosing a pipeline are **separate decisions**. The likely end state is *the best detector* feeding *the Grounded SAM 2 tracker* — which is not any one of these five off the shelf, but a recombination of them.
+
+```
+         DETECTORS                          PIPELINES
+  ┌──────────────────────┐        ┌──────────────────────────────┐
+  │ Grounding DINO 1.0   │        │ Grounded SAM                 │
+  │ MM-Grounding-DINO    │ ──────►│   detector → SAM   (masks)   │
+  │ PET-DINO             │        │                              │
+  │                      │        │ Grounded SAM 2               │
+  │ boxes from text      │ ──────►│   detector → SAM 2 (masks +  │
+  └──────────────────────┘        │              track IDs)      │
+                                  └──────────────────────────────┘
+```
