@@ -42,3 +42,77 @@ reference; see [`papers/04_grounded_sam_2/NO_STANDALONE_PAPER.md`](papers/04_gro
 
 Machine-readable: [`metadata/systems.json`](metadata/systems.json) ·
 [`metadata/systems.csv`](metadata/systems.csv)
+
+## The five systems
+
+### 1. Grounding DINO 1.0 — *detector*
+
+The original open-vocabulary detector everything else here descends from. It
+fuses a Swin image backbone with a BERT text encoder early — in the neck, in
+query initialisation, and in the head — so a free-form phrase can steer detection
+directly, with no fixed class list and no task-specific training.
+
+- **GitHub:** <https://github.com/IDEA-Research/GroundingDINO>
+- **Paper:** [arXiv 2303.05499](https://arxiv.org/abs/2303.05499) · [`papers/01_grounding_dino/`](papers/01_grounding_dino/)
+- **Kind:** standalone detector
+- **Output:** boxes + phrase scores. No masks, no track IDs.
+- **Supporting reading:** [DINO](https://arxiv.org/abs/2203.03605), [BERT](https://arxiv.org/abs/1810.04805), [Swin Transformer](https://arxiv.org/abs/2103.14030) — in [`../papers/core_foundations/`](../papers/core_foundations/), referenced rather than duplicated
+- **Why test it:** it is the reference point. Every other system is a delta against it, so its behaviour on aerial imagery sets the baseline the others must beat.
+- **Notes:** [`notes/grounding_dino.md`](notes/grounding_dino.md)
+
+### 2. MM-Grounding-DINO — *detector*
+
+OpenMMLab's clean-room reimplementation, retrained on a much larger open data
+mixture (Objects365, GoldG, GRIT-9M, V3Det). Same interface as Grounding DINO,
+better zero-shot accuracy, and — decisively — a real deployment story.
+
+- **GitHub:** <https://github.com/open-mmlab/mmdetection> ⚠️ **not a standalone repo** — the model lives inside MMDetection at `configs/mm_grounding_dino/`
+- **Paper:** [arXiv 2401.02361](https://arxiv.org/abs/2401.02361) · [`papers/02_mm_grounding_dino/`](papers/02_mm_grounding_dino/)
+- **Kind:** standalone detector
+- **Output:** boxes + phrase scores
+- **Why test it:** it is the only one of the five with a **first-party TensorRT path** ([MMDeploy](https://github.com/open-mmlab/mmdeploy), which ships a plugin for the deformable-attention op that blocks exporting vanilla Grounding DINO). If its accuracy holds on aerial data, it is the most likely thing to actually reach the Orin.
+- **Notes:** [`notes/mm_grounding_dino.md`](notes/mm_grounding_dino.md)
+
+### 3. Grounded Segment Anything — *segmentation pipeline*
+
+**A pipeline, not a new model.** Grounding DINO produces boxes from text; SAM
+turns those boxes into masks. Nothing new is trained — the contribution is the
+assembly.
+
+- **GitHub:** <https://github.com/IDEA-Research/Grounded-Segment-Anything>
+- **Paper:** [arXiv 2401.14159](https://arxiv.org/abs/2401.14159) · [`papers/03_grounded_sam/`](papers/03_grounded_sam/)
+- **Foundations:** [Grounding DINO](https://arxiv.org/abs/2303.05499) + [Segment Anything](https://arxiv.org/abs/2304.02643)
+- **Kind:** pipeline (detector → segmenter). **No weights of its own** — it reuses the shared Grounding DINO and SAM checkpoints.
+- **Output:** boxes **and per-object masks**. No tracking.
+- **Why test it:** one question only — **do precise masks localise an aerial target better than a box?** A box around a person seen from a drone is mostly ground; a mask is not. If the answer is "not usefully", drop it and move on.
+- **Notes:** [`notes/grounded_sam.md`](notes/grounded_sam.md)
+
+### 4. Grounded SAM 2 — *tracking pipeline*
+
+**A pipeline, and the closest system-level match to what this project is actually
+building.** Grounding DINO acquires the target from language; SAM 2 segments and
+**tracks it across frames** using a memory bank. Acquire once with a slow
+detector, then track cheaply — precisely the architecture the drone brief
+describes.
+
+- **GitHub:** <https://github.com/IDEA-Research/Grounded-SAM-2>
+- **Primary paper:** [SAM 2 — arXiv 2408.00714](https://arxiv.org/abs/2408.00714) · [`papers/04_grounded_sam_2/`](papers/04_grounded_sam_2/)
+- ⚠️ **No standalone Grounded SAM 2 paper exists.** It is a software integration. Rather than fabricate a citation, that absence is documented in [`papers/04_grounded_sam_2/NO_STANDALONE_PAPER.md`](papers/04_grounded_sam_2/NO_STANDALONE_PAPER.md), and the official repo README is the authoritative description of the integration itself.
+- **Kind:** pipeline (detector → segmenter → tracker)
+- **Output:** masks, boxes, and **persistent track IDs**. The only system here that produces track IDs.
+- **Why test it:** it is the only one that closes the loop from natural language to a sustained track. `sam2.1_hiera_tiny` is 149 MB — genuinely plausible for real-time tracking on Orin.
+- **Notes:** [`notes/grounded_sam_2.md`](notes/grounded_sam_2.md)
+
+### 5. PET-DINO — *detector*
+
+A Grounding-DINO-derived detector (an MMDetection fork) that takes **text prompts
+*and* visual prompts**. The only system of the five that does both: instead of
+describing the target, you can point at an example.
+
+- **GitHub:** <https://github.com/fuweifuvtoo/PET_DINO> · **Project page:** <https://fuweifuvtoo.github.io/pet-dino/>
+- **Paper:** [arXiv 2604.00503](https://arxiv.org/abs/2604.00503) — **CVPR 2026 (Highlight)** · [`papers/05_pet_dino/`](papers/05_pet_dino/)
+- **Kind:** standalone detector
+- **Output:** boxes + scores. No masks, no track IDs.
+- **Why test it:** visual prompting is a natural fit for a drone operator UI — *"track **that**"* is often more precise than any sentence, especially for targets with no clean verbal description. Its precomputed-embedding path is also deployment-friendly.
+- **Caveat:** only a **Swin-T** checkpoint is published; the in-repo Swin-L config has no released weight. It is a brand-new paper with no export tooling.
+- **Notes:** [`notes/pet_dino.md`](notes/pet_dino.md)
