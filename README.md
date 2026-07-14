@@ -213,3 +213,17 @@ tracked.
   PDFs **are** committed (small, redistributable, official).
 - Nothing here calls `torch.load`, imports model code, or runs inference.
 - **No proprietary Honeywell / Shield AI / Hivemind material in this repo.**
+
+
+FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-devel
+
+ARG USE_CUDA=0
+ARG TORCH_ARCH="7.0;7.5;8.0;8.6"
+
+ENV AM_I_DOCKER=True
+ENV BUILD_WITH_CUDA="${USE_CUDA}"
+ENV TORCH_CUDA_ARCH_LIST="${TORCH_ARCH}"
+
+ENV CUDA_HOME=/usr/local/cuda
+ENV PATH=${CUDA_HOME}/bin:${PATH}
+ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
