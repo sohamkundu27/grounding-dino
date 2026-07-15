@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grounded SAM 2 — what it is, how it runs, what it gave us</title>
+</head>
+<body>
+<style>
+  :root {
+    --ground: #F3F5F4;
+    --surface: #FCFCFB;
+    --surface-2: #EDF1F0;
+    --ink: #101A1C;
+    --ink-2: #35474A;
+    --muted: #5E6E70;
+    --rule: #DCE3E2;
+    --accent: #0B5F5C;
+    --accent-soft: #0b5f5c14;
+    --mark-green: #2E9E4F;
+    --mark-amber: #B07A12;
+    --mark-rust: #C0492F;
+    --shadow: 0 1px 2px #0d201f0f, 0 8px 24px -12px #0d201f1f;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0E1416;
+      --surface: #151D1F;
+      --surface-2: #1C2628;
+      --ink: #E4EBEA;
+      --ink-2: #B9C7C7;
+      --muted: #8FA1A2;
+      --rule: #27332F;
+      --accent: #4FB3AC;
+      --accent-soft: #4fb3ac1a;
+      --mark-green: #35A854;
+      --mark-amber: #BA8A22;
+      --mark-rust: #D0563C;
+      --shadow: 0 1px 2px #0004, 0 10px 30px -14px #0009;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0E1416;
+    --surface: #151D1F;
+    --surface-2: #1C2628;
+    --ink: #E4EBEA;
+    --ink-2: #B9C7C7;
+    --muted: #8FA1A2;
+    --rule: #27332F;
+    --accent: #4FB3AC;
+    --accent-soft: #4fb3ac1a;
+    --mark-green: #35A854;
+    --mark-amber: #BA8A22;
+    --mark-rust: #D0563C;
+    --shadow: 0 1px 2px #0004, 0 10px 30px -14px #0009;
+  }
+  :root[data-theme="light"] {
+    --ground: #F3F5F4;
+    --surface: #FCFCFB;
+    --surface-2: #EDF1F0;
+    --ink: #101A1C;
+    --ink-2: #35474A;
+    --muted: #5E6E70;
+    --rule: #DCE3E2;
+    --accent: #0B5F5C;
+    --accent-soft: #0b5f5c14;
+    --mark-green: #2E9E4F;
+    --mark-amber: #B07A12;
+    --mark-rust: #C0492F;
+    --shadow: 0 1px 2px #0d201f0f, 0 8px 24px -12px #0d201f1f;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+  /* prose column: everything narrow unless it opts out */
+  .col { max-width: 65ch; }
+
+  h1, h2, h3 { text-wrap: balance; line-height: 1.18; }
+  h1 {
+    font-size: clamp(2.1rem, 4.6vw, 3.3rem);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0 0 18px;
+  }
+  h2 {
+    font-size: clamp(1.5rem, 2.6vw, 1.95rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+  }
+  h3 {
+    font-size: 1.18rem;
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+  p { margin: 0 0 18px; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+  strong { font-weight: 650; }
+  em.term { font-style: italic; color: var(--ink); }
+
+  /* ---- the mono voice: anything that came out of the pipeline ---- */
+  .m, code, .stat-v, th, td, figcaption, .eyebrow, .tag, .diag, .axis {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+  code {
+    font-size: 0.84em;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 0.08em 0.36em;
+  }
+  .eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  header.masthead {
+    padding: 72px 0 40px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 8px;
+  }
+  .lede {
+    font-size: 1.22rem;
+    color: var(--ink-2);
+    max-width: 60ch;
+  }
+
+  section { padding: 44px 0; border-bottom: 1px solid var(--rule); }
+  section:last-of-type { border-bottom: 0; }
+  .sec-head { margin-bottom: 26px; }
+
+  /* verdict pair */
+  .verdicts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin: 28px 0 8px;
+  }
+  .verdict {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+  }
+  .verdict .tag {
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 10px;
+  }
+  .tag::before {
+    content: "";
+    width: 9px; height: 9px;
+    border-radius: 2px;
+    background: currentColor;
+  }
+  .v-good .tag { color: var(--mark-green); }
+  .v-bad .tag { color: var(--mark-rust); }
+  .verdict p { margin: 0; font-size: 0.98rem; color: var(--ink-2); }
+  .verdict .headline { font-size: 1.06rem; color: var(--ink); margin-bottom: 8px; font-weight: 600; }
+
+  /* stat row */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 26px 0;
+  }
+  .stat { background: var(--surface); padding: 16px 18px; }
+  .stat-k {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .stat-v { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; display: block; }
+  .stat-n { font-size: 0.78rem; color: var(--muted); font-family: var(--mono); }
+  .good { color: var(--mark-green); }
+  .bad { color: var(--mark-rust); }
+
+  /* pipeline diagram */
+  .diag {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 26px;
+    margin: 24px 0;
+    overflow-x: auto;
+    box-shadow: var(--shadow);
+  }
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    min-width: 720px;
+  }
+  .node {
+    flex: 1;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 14px 13px;
+    background: var(--surface-2);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .node.model {
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+  }
+  .node-t { font-size: 0.82rem; font-weight: 700; color: var(--ink); letter-spacing: 0.01em; }
+  .node-s { font-size: 0.7rem; color: var(--muted); line-height: 1.45; }
+  .arrow {
+    flex: 0 0 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--muted);
+    font-size: 0.63rem;
+    text-align: center;
+    padding: 0 4px;
+  }
+  .arrow .glyph { color: var(--accent); font-size: 1.05rem; line-height: 1; }
+  .flow-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .flow + .flow-label { margin-top: 28px; }
+
+  /* figures */
+  figure { margin: 30px 0; }
+  figure img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+  figcaption {
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: var(--muted);
+    margin-top: 10px;
+    max-width: 78ch;
+  }
+  figcaption b { color: var(--ink); font-weight: 700; }
+  figcaption .fc-good { color: var(--mark-green); font-weight: 700; }
+  figcaption .fc-bad { color: var(--mark-rust); font-weight: 700; }
+
+  /* tables */
+  .tbl-wrap { overflow-x: auto; margin: 24px 0; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  th {
+    font-size: 0.66rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    background: var(--surface-2);
+  }
+  tr:last-child td { border-bottom: 0; }
+  td.num { text-align: right; }
+  .win { color: var(--mark-green); font-weight: 700; }
+
+  /* chart */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 22px 24px 16px;
+    margin: 26px 0;
+    box-shadow: var(--shadow);
+  }
+  .chart-title { font-size: 1.02rem; font-weight: 600; margin-bottom: 3px; }
+  .chart-sub { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-bottom: 18px; }
+  #chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .axis { font-size: 10px; fill: var(--muted); }
+  .gridline { stroke: var(--rule); stroke-width: 1; }
+  .anno-lbl { font-family: var(--mono); font-size: 10.5px; font-weight: 700; }
+  .tip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--ink);
+    color: var(--ground);
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.5;
+    padding: 7px 10px;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity .1s;
+    white-space: nowrap;
+    z-index: 5;
+  }
+  .chart-shell { position: relative; }
+
+  details {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 22px 0;
+  }
+  summary { cursor: pointer; font-weight: 600; font-size: 0.95rem; }
+  details[open] summary { margin-bottom: 12px; }
+  pre {
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    line-height: 1.65;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    margin: 0;
+  }
+  pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+  .cmt { color: var(--muted); }
+  .kw { color: var(--accent); }
+
+  ul.clean { margin: 0 0 18px; padding-left: 1.15em; }
+  ul.clean li { margin-bottom: 9px; }
+  ul.clean li::marker { color: var(--accent); }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 6px 6px 0;
+    padding: 16px 20px;
+    margin: 24px 0;
+    font-size: 0.97rem;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .eyebrow { color: var(--accent); }
+
+  footer {
+    padding: 40px 0 0;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    line-height: 1.7;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+  @media (max-width: 640px) {
+    body { font-size: 17px; }
+    .wrap { padding: 0 18px 64px; }
+    header.masthead { padding: 44px 0 32px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="eyebrow">Local evaluation · RTX 3080 · experiments/grounded_sam2_local</span>
+    <h1>Grounded SAM&nbsp;2</h1>
+    <p class="lede">A pipeline that turns a sentence into a tracked segmentation mask — by bolting an
+      open-vocabulary detector onto a video segmenter. Here is what it is, how it runs,
+      what it produced on RefDrone, and exactly where it breaks.</p>
+
+    <div class="diag" style="margin-top:32px">
+      <div class="flow" style="min-width:600px">
+        <div class="node"><span class="node-t">"car"</span><span class="node-s">free-form text prompt</span></div>
+        <div class="arrow"><span class="glyph">→</span></div>
+        <div class="node model"><span class="node-t">Grounding DINO 1.0</span><span class="node-s">open-vocab detector</span></div>
+        <div class="arrow"><span class="glyph">→</span><span>box</span></div>
+        <div class="node model"><span class="node-t">SAM 2.1</span><span class="node-s">segment + track</span></div>
+        <div class="arrow"><span class="glyph">→</span></div>
+        <div class="node"><span class="node-t">mask / track</span><span class="node-s">per-frame, id-stable</span></div>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <div class="col sec-head">
+      <span class="eyebrow">The one-paragraph version</span>
+      <h2>It is a pipeline, not a model</h2>
+    </div>
+    <div class="col">
+      <p>This is the single most important thing to internalize, and it explains every result below.
+        Grounded SAM&nbsp;2 is <strong>not a trained network</strong>. It has no weights of its own, no joint
+        training, no loss function, and <strong>no standalone paper</strong> — it is a piece of integration
+        software from IDEA Research that chains two independently-trained models together:</p>
+      <ul class="clean">
+        <li><strong>Grounding DINO 1.0</strong> reads the text and finds boxes. It is the <em class="term">language</em> half.</li>
+        <li><strong>SAM 2.1</strong> takes a box and produces a pixel mask — and, in video, propagates that mask
+          forward through time with a memory bank. It is the <em class="term">pixels and time</em> half.</li>
+      </ul>
+      <p>Because nothing was trained end-to-end, the two halves never learned to cover for each other.
+        Whatever the detector gets wrong, the segmenter faithfully — and beautifully — segments anyway.
+        Hold onto that sentence; it is the entire negative result.</p>
+    </div>
+
+    <div class="verdicts">
+      <div class="verdict v-good">
+        <span class="tag">Promising</span>
+        <p class="headline">As a category-prompted detect-and-track pipeline</p>
+        <p>Prompt it with <code>car</code> or <code>zebra</code> and it works: 32 FPS tracking, 2.1 GB VRAM,
+          excellent masks, fully local. The architecture is sound and cheap.</p>
+      </div>
+      <div class="verdict v-bad">
+        <span class="tag">Not usable</span>
+        <p class="headline">As a referring-expression system</p>
+        <p>Prompt it with <i>"the black cars near the intersection"</i> and it scores <b>22%</b> top-1 on
+          RefDrone. It resolves the noun and throws the rest of the sentence away.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="col sec-head">
+      <span class="eyebrow">Component 1 of 2</span>
+      <h2>Grounding DINO — the language half</h2>
+    </div>
+    <div class="col">
+      <p>An <em class="term">open-vocabulary</em> detector: instead of a fixed list of 80 COCO classes, it takes
+        an arbitrary text prompt and returns boxes for whatever the text names. It never saw your class
+        list at training time, and it needs no fine-tuning to detect a new noun.</p>
+      <p>Internally it fuses two towers. A <strong>Swin-T</strong> vision backbone encodes the image; a
+        <strong>BERT</strong> encoder encodes the prompt. A cross-modality feature enhancer lets the two attend to
+        each other, and language-guided query selection picks the image regions that best match the text.
+        The decoder emits <code>(box, confidence, matched_phrase)</code> triples.</p>
+      <p>Two consequences fall straight out of that design, and both show up in our numbers. First, it is
+        genuinely open-vocabulary — a real capability. Second, and fatally for our use case, the
+        <strong>text–image matching is essentially noun-level</strong>. It is a category detector wearing a language
+        interface, not a system that reasons about <i>which</i> car you meant.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="col sec-head">
+      <span class="eyebrow">Component 2 of 2</span>
+      <h2>SAM&nbsp;2 — the pixels-and-time half</h2>
+    </div>
+    <div class="col">
+      <p>SAM 2 is <em class="term">promptable</em>: it does not decide what to segment, it segments what you point
+        it at. Give it a box, a click, or a mask, and it returns a pixel-accurate mask. It has no idea what
+        a "car" is and does not care.</p>
+      <p>Three pieces matter for reading the timings later:</p>
+      <ul class="clean">
+        <li>The <strong>Hiera image encoder</strong> — runs once per frame, and is the expensive,
+          backbone-dependent stage. In code this is <code>set_image()</code>.</li>
+        <li>The <strong>mask decoder</strong> — turns the prompt into a mask. Cheap, and nearly identical across
+          Tiny/Small/Large. This is <code>predict()</code>.</li>
+        <li>The <strong>memory bank</strong> — the actual innovation of SAM 2 over SAM 1. It stores features of the
+          object from previous frames and cross-attends to them, which is how a mask survives motion,
+          scale change, and occlusion <i>without re-detecting</i>.</li>
+      </ul>
+      <p>That memory bank is what makes the whole architecture cheap. And, as we'll see, it is also the
+        source of the nastiest failure in the entire evaluation — because a memory that never forgets
+        has no way to say <i>"the thing I was tracking is gone."</i></p>
+    </div>
+  </section>
+
+  <section>
+    <div class="col sec-head">
+      <span class="eyebrow">The pipeline</span>
+      <h2>How the two halves are wired</h2>
+    </div>
+    <div class="col">
+      <p>There are two paths through the system, and they differ in one crucial way: how often the
+        detector runs.</p>
+    </div>
+
+    <div class="diag">
+      <div class="flow-label">Image path — detector runs on every image</div>
+      <div class="flow">
+        <div class="node"><span class="node-t">image + prompt</span><span class="node-s">"the black cars near the intersection"</span></div>
+        <div class="arrow"><span class="glyph">→</span></div>
+        <div class="node model"><span class="node-t">Grounding DINO</span><span class="node-s">gd_predict()<br>~101 ms</span></div>
+        <div class="arrow"><span class="glyph">→</span><span>N boxes</span></div>
+        <div class="node"><span class="node-t">argmax(score)</span><span class="node-s">keep the single highest-confidence box — SAM 2 takes exactly one</span></div>
+        <div class="arrow"><span class="glyph">→</span><span>1 box</span></div>
+        <div class="node model"><span class="node-t">SAM 2.1</span><span class="node-s">sam2_masks()<br>~42 ms</span></div>
+        <div class="arrow"><span class="glyph">→</span></div>
+        <div class="node"><span class="node-t">mask</span><span class="node-s">143 ms total · 7 FPS</span></div>
+      </div>
+
+      <div class="flow-label">Video path — detector runs <b>once</b>, then never again</div>
+      <div class="flow">
+        <div class="node"><span class="node-t">frame 0 + prompt</span><span class="node-s">"car"</span></div>
+        <div class="arrow"><span class="glyph">→</span></div>
+        <div class="node model"><span class="node-t">Grounding DINO</span><span class="node-s">ONCE · 358 ms<br>acquisition</span></div>
+        <div class="arrow"><span class="glyph">→</span><span>init box</span></div>
+        <div class="node model"><span class="node-t">SAM 2 memory</span><span class="node-s">propagate_in_video()<br>frames 1…N, no re-detection</span></div>
+        <div class="arrow"><span class="glyph">→</span></div>
+        <div class="node"><span class="node-t">mask per frame</span><span class="node-s">31 ms/frame · 32 FPS</span></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <p>The video path is the whole point of the architecture. You pay for language understanding
+        <strong>exactly once</strong> (358 ms), and then every subsequent frame costs only SAM 2 (31 ms). That is
+        what turns a 7 FPS detector into a 32 FPS tracker, and it is why this shape of pipeline is
+        attractive for a drone.</p>
+      <p>It is also, precisely, why the tracker can silently lock onto the wrong object forever: with
+        no re-detection, <strong>nothing in the loop ever re-checks the semantics</strong>.</p>
+    </div>
+
+    <details class="col" style="max-width:none">
+      <summary>The actual code — <code>scripts/gsam2_local.py</code> and <code>run_video_demo.py</code></summary>
+      <pre><code><span class="cmt"># IMAGE PATH — detector, then pick one box, then segment</span>
+boxes, scores, phrases, gd_ms, wh = G.gd_predict(gd, img, prompt, box_thr, text_thr)
+top      = int(np.argmax(scores))   <span class="cmt"># &lt;-- top-1 selection. This is the weak link.</span>
+init_box = boxes[top]
+masks, sam_ms = G.sam2_masks(predictor, image_rgb, init_box)
+
+<span class="cmt"># VIDEO PATH — acquire once on frame 0, then propagate with memory</span>
+boxes, scores, _, gd_ms, _ = G.gd_predict(gd, frames[0], prompt)   <span class="cmt"># ONCE</span>
+init_box = boxes[int(np.argmax(scores))]
+<span class="kw">del</span> gd; torch.cuda.empty_cache()          <span class="cmt"># detector is dropped entirely</span>
+
+state = predictor.init_state(video_path=frames_dir)
+predictor.add_new_points_or_box(state, frame_idx=0, obj_id=1, box=init_box)
+
+<span class="kw">for</span> fidx, obj_ids, logits <span class="kw">in</span> predictor.propagate_in_video(state):
+    masks_by_frame[fidx] = (logits[0] &gt; 0.0)   <span class="cmt"># no detector in this loop, ever</span></code></pre>
+    </details>
+  </section>
+
+  <section>
+    <div class="col sec-head">
+      <span class="eyebrow">What we ran</span>
+      <h2>Four phases</h2>
+    </div>
+    <div class="col">
+      <p>Everything ran locally on an RTX 3080 — no cloud API, no API key, no image upload, and (after
+        one fix) <strong>no network at inference at all</strong>. Upstream ships six demos that call IDEA's DDS
+        cloud API; every one of them was enumerated and avoided.</p>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Phase</th><th>What it did</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>1 · Smoke</td><td>One aerial image, prompts <code>car</code> / <code>person</code></td><td class="win">PASS</td></tr>
+          <tr><td>2 · RefDrone</td><td>50 (image, referring-expression) pairs, seed 1234</td><td>Ran — <span class="bad">accuracy is poor</span></td></tr>
+          <tr><td>3 · Video</td><td>2 clips, detect-once + SAM 2 propagation</td><td>Found a real failure mode</td></tr>
+          <tr><td>4 · Benchmark</td><td>SAM2.1 Tiny vs Small, isolated processes</td><td class="win">PASS</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="col sec-head">
+      <span class="eyebrow">Phase 2 · the headline negative result</span>
+      <h2>RefDrone: it ignores the sentence</h2>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span class="stat-k">Top-1 @ IoU≥0.5</span><span class="stat-v bad">22.0%</span><span class="stat-n">11 / 50</span></div>
+      <div class="stat"><span class="stat-k">Mean best IoU</span><span class="stat-v">0.212</span><span class="stat-n">median 0.004</span></div>
+      <div class="stat"><span class="stat-k">Multi-detection</span><span class="stat-v">84.0%</span><span class="stat-n">median 4 boxes, max 25</span></div>
+      <div class="stat"><span class="stat-k">No detection</span><span class="stat-v">4.0%</span><span class="stat-n">2 / 50</span></div>
+      <div class="stat"><span class="stat-k">GD latency</span><span class="stat-v">104<span style="font-size:.7em"> ms</span></span><span class="stat-n">vs SAM 2: 26 ms</span></div>
+    </div>
+
+    <div class="col">
+      <p><strong>The median IoU is 0.004.</strong> That is not a model that is nearly right — on half the
+        expressions, the returned box has essentially <i>zero overlap</i> with the referent.</p>
+      <p>The mechanism is visible in the figures below. Grounding DINO resolves the <strong>category</strong> in the
+        expression and discards the referring qualifiers. Given <i>"the black cars near the
+        intersection,"</i> it hears <b>"cars"</b> — returns ten of them — and the highest-confidence one is a
+        dark car that simply isn't the referent. SAM 2 then segments that wrong box <i>perfectly</i>.</p>
+      <p><strong>A clean, confident mask on the wrong object is the characteristic output of this pipeline.</strong>
+        The failure is in language grounding. Nothing is wrong with the segmentation.</p>
+    </div>
+
+    <figure>
+      <img src="figures/01_detection_success.jpg" alt="Three panels: aerial input, one green Grounding DINO box on a blue vehicle, and a tight SAM 2 mask on the same vehicle.">
+      <figcaption><b>01 · <span class="fc-good">SUCCESS</span>.</b> <i>"The blue vehicles in the image."</i> → 1 box, <b>IoU 0.84</b>.
+        When the scene contains exactly one instance of the category, top-1 selection cannot go wrong, and
+        the mask is tight. Note <i>why</i> it succeeded — not because it understood "blue," but because there
+        was nothing to disambiguate.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="figures/02_detection_failure_qualifier_ignored.jpg" alt="Three panels: aerial intersection, Grounding DINO returning ten boxes with the top one on the wrong dark car, and SAM 2 producing a clean mask on that wrong car.">
+      <figcaption><b>02 · <span class="fc-bad">THE CHARACTERISTIC FAILURE</span>.</b> <i>"The black cars near the intersection."</i>
+        → <b>10 boxes</b>, top-1 <b>IoU 0.00</b>. The qualifiers <i>"black"</i> and <i>"near the intersection"</i> did no work at
+        all. And look at the right-hand panel: SAM 2's mask is <i>flawless</i> — on the wrong car. This is the
+        pipeline failing while looking like it is succeeding.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="figures/03_prompt_ambiguity_same_expression.jpg" alt="The same expression as figure 1 on a different frame, scoring IoU 0.00 with a box covering nearly the whole image.">
+      <figcaption><b>03 · <span class="fc-bad">THE PROMPT IS NOT THE VARIABLE</span>.</b> The <i>identical</i> expression from figure 01 —
+        <i>"The blue vehicles in the image."</i> — on a different frame: <b>IoU 0.00</b>, with a box swallowing the
+        whole scene. <b>0.84 vs 0.00 on the same words.</b> You cannot prompt-engineer your way out of this;
+        the controlling variable is the scene, not the sentence.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="figures/05_multiple_similar_targets.jpg" alt="Aerial street scene where Grounding DINO returns eight boxes for eight ground-truth cars, but the top-scoring one is not the referent.">
+      <figcaption><b>05 · <span class="fc-bad">DISAMBIGUATION IS THE GAP</span>.</b> <i>"The blue cars park along the street and curbside."</i>
+        → <b>8 boxes for 8 GT objects</b> — the right number of the right class — and still <b>top-1 IoU 0.01</b>.
+        The detector found everything and could not rank the referent first. With 84% of expressions
+        returning multiple boxes, taking <code>argmax(score)</code> is close to arbitrary.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="figures/04_small_aerial_targets.jpg" alt="Aerial frame with thirteen small person detections at low confidence.">
+      <figcaption><b>04 · <span class="fc-bad">SMALL AERIAL TARGETS</span>.</b> <code>person</code> on a 1920×1080 aerial frame → 13 detections,
+        top score <b>0.48</b> — against <b>0.67</b> for <code>car</code> on the <i>same frame</i>. Confidence erodes sharply as the
+        target shrinks. Relevant for anything flown at altitude.</figcaption>
+    </figure>
+
+    <div class="callout col" style="max-width:none">
+      <span class="eyebrow">Read this before quoting 22%</span>
+      <p>This is <b>our</b> protocol, not RefDrone's official metric: take the highest-confidence box, score it
+        as max IoU against the ground-truth boxes for that expression. <b>Do not compare it to published
+        RefDrone numbers</b> — the official evaluator was not run. It is, however, the protocol that <i>matters
+        for this pipeline</i>, because SAM 2 must be seeded with exactly one box. It is also strict on
+        multi-target expressions: finding 24 of 25 referenced objects and ranking the wrong one first
+        scores zero. And RefDrone ships <b>boxes only, no mask ground truth</b> — so SAM 2's mask quality is
+        assessed visually and deliberately <b>not scored</b>. No segmentation ground truth was invented.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="col sec-head">
+      <span class="eyebrow">Phase 3 · the failure that actually matters</span>
+      <h2>Tracking, and the silent identity switch</h2>
+    </div>
+    <div class="col">
+      <p>Two clips, same protocol: Grounding DINO fires once on frame 0, SAM 2 propagates for 200 frames
+        with no re-detection.</p>
+      <p>The control clip (<code>zebra.mp4</code>, prompt <code>zebra</code>) is a clean pass: <strong>200/200 frames masked, zero
+        empty, zero dropouts</strong>. It even survived a mutual-occlusion event at frames 28–30, where another
+        zebra walked in front of the target and the mask area fell to 40% — SAM 2 wrapped the mask
+        <i>around</i> the occluder and recovered the full silhouette. When the target is present, this
+        tracker is genuinely good.</p>
+      <p>The second clip is where it gets interesting.</p>
+    </div>
+
+    <figure>
+      <img src="figures/06_tracking_success.jpg" alt="Frame 199 of the zebra clip with a coherent green mask on a single zebra.">
+      <figcaption><b>06 · <span class="fc-good">TRACKING SUCCESS</span>.</b> <code>zebra.mp4</code>, frame 199 of 200. One acquisition on frame 0,
+        then pure SAM 2 memory propagation. The mask is still coherent and still on the right animal 200
+        frames later. <i>Not claimed:</i> that identity survived the frame-29 occlusion — five near-identical
+        mutually-occluding animals and no instance ground truth means that is not certifiable, so we
+        don't certify it.</figcaption>
+    </figure>
+
+    <div class="col">
+      <p>Now <code>tracking_car.mp4</code>. The chart below is the per-frame mask area, straight out of
+        <code>video_results_tracking_car.json</code>. It contains the entire story.</p>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Mask area per frame — <span class="m">tracking_car.mp4</span>, prompt <span class="m">"car"</span></div>
+      <div class="chart-sub">200 frames · 1920×1080 · SAM2.1 Tiny · object id 1 · no re-detection</div>
+      <div class="chart-shell">
+        <svg id="chart" viewBox="0 0 880 300" role="img" aria-label="Mask area rises to 70,482 px by frame 65, collapses to zero at frame 69 as the car exits the bottom of the frame, stays empty for 107 frames, then reappears at frame 176 at only 1,509 px — a different car near the horizon."></svg>
+        <div class="tip" id="tip"></div>
+      </div>
+      <div class="chart-sub" style="margin:14px 0 0">
+        Full data in <span class="m">results/video_results_tracking_car.json</span> → <span class="m">tracking.per_frame_mask_area_px</span>
+      </div>
+    </div>
+
+    <div class="col">
+      <p>Read it left to right. <strong>Frames 0–68 are a clean track</strong>: the mask grows smoothly from 1,592 px
+        to 70,482 px as the car drives toward the overpass camera. No drift, no dropouts.</p>
+      <p><strong>At frame 69 the target leaves the frame.</strong> The mask was shrinking <i>and</i> clipped by the bottom
+        border — the car drove out underneath the camera. The 107 empty frames that follow are
+        <strong>correct behaviour</strong>, not a tracking failure.</p>
+      <p><strong>At frame 176, SAM 2 silently re-bound object id 1 to a different car</strong> — 953 px away, near the
+        horizon — and reported it with full confidence.</p>
+    </div>
+
+    <figure>
+      <img src="figures/07_tracking_failure_identity_switch.jpg" alt="Highway frame 176 with a small green mask on a distant car near the horizon, far from where the original tracked car exited.">
+      <figcaption><b>07 · <span class="fc-bad">THE SILENT IDENTITY SWITCH</span>.</b> <code>tracking_car.mp4</code>, frame 176. The car acquired on
+        frame 0 exited the <i>bottom</i> of the frame at f69 and is gone for good. Here, 107 frames later, object
+        id 1 has been re-bound to <b>a different car near the horizon</b> — that small green mask, 953 px from
+        where the original vanished — and it is reported with full confidence.</figcaption>
+    </figure>
+
+    <div class="callout col" style="max-width:none">
+      <span class="eyebrow">Why this is the important result</span>
+      <p><b>SAM 2 has no terminal "object is gone" state and no identity check.</b> In this architecture the
+        detector never re-runs, so nothing ever corrects the switch. A tracker that quietly swaps targets
+        and keeps reporting is <i>worse</i> than one that reports loss — downstream, you cannot tell the
+        difference between a track and a lie.</p>
+      <p>It is also a trap for the evaluator, and we walked into it twice. Counting empty masks called
+        those 107 frames a <b>53.5% tracking failure</b>. Splitting on last-visible-frame called them dropouts
+        that <b>"recovered"</b> — scoring the false positive as a success. Both are artefacts of scoring mask
+        <b>area</b> alone. Only mask <b>geometry</b> — was it shrinking, was it clipped by a border, how far did the
+        centroid jump — separates egress from drift from an identity switch. The harness now records
+        per-frame area, bbox and centroid so the classification is auditable.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="col sec-head">
+      <span class="eyebrow">Phase 4 · performance</span>
+      <h2>The detector is the cost, not the segmenter</h2>
+    </div>
+    <div class="col">
+      <p>Three warm-ups discarded, 10 measured iterations, each config in a <i>fresh process</i>. Every GPU
+        region is timed with <code>torch.cuda.synchronize()</code> on both sides.</p>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th></th><th class="num">A · SAM2.1 Tiny</th><th class="num">B · SAM2.1 Small</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Warm image latency</td><td class="num win">143 ms · 7.0 FPS</td><td class="num">146 ms · 6.8 FPS</td></tr>
+          <tr><td>&nbsp;&nbsp;of which Grounding DINO</td><td class="num">101 ms</td><td class="num">101 ms</td></tr>
+          <tr><td>&nbsp;&nbsp;of which SAM 2</td><td class="num">42 ms</td><td class="num">45 ms</td></tr>
+          <tr><td>Tracking throughput</td><td class="num win">32.5 FPS</td><td class="num">30.3 FPS</td></tr>
+          <tr><td>Peak VRAM (tracking)</td><td class="num win">2,138 MB</td><td class="num">2,180 MB</td></tr>
+          <tr><td>Model load (cold)</td><td class="num">2,253 ms</td><td class="num">2,246 ms</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col">
+      <p><strong>Grounding DINO is ~70% of per-image latency and is identical in both configs.</strong> Going Tiny →
+        Small costs 3 ms per image, 2.1 FPS of tracking, and 43 MB of VRAM, and bought no visible quality
+        anywhere. The SAM 2 backbone is not the lever on this pipeline's cost — <strong>the detector is</strong>. On
+        Jetson, spend the headroom on the detector, and start with Tiny.</p>
+    </div>
+
+    <details class="col" style="max-width:none">
+      <summary>Two measurement bugs we found in our own harness</summary>
+      <p style="font-size:.95rem;margin:12px 0 0">
+        <b>1. SAM 2 latency was decoder-only.</b> <code>sam2_masks()</code> called <code>set_image()</code> <i>outside</i> the timer —
+        but <code>set_image()</code> runs the Hiera image encoder, which is the dominant, backbone-dependent stage.
+        <code>predict()</code> is just the mask decoder, which is near-identical across backbones. The tell was that
+        <b>Small benchmarked faster than Tiny</b> (12.0 vs 21.9 ms), which is impossible. Timed end-to-end,
+        Small is correctly slower (45 vs 42 ms). Every SAM 2 latency reported before that fix was too low.</p>
+      <p style="font-size:.95rem;margin:12px 0 0">
+        <b>2. Config B was free-riding on config A's warm process.</b> Run back-to-back, B appeared to load in
+        630 ms against A's 1,963 ms. Isolated into its own process: 2,253 vs 2,246 ms. The entire gap was
+        CUDA-context and page-cache carry-over.</p>
+    </details>
+  </section>
+
+  <section>
+    <div class="col sec-head">
+      <span class="eyebrow">What it produces</span>
+      <h2>The outputs</h2>
+    </div>
+    <div class="col">
+      <p>Each phase writes a JSON result file to <code>results/</code>, and <code>summarize_results.py</code> regenerates
+        <code>summary.md</code> from those files — <strong>every number in the write-up is read from a result file, none is
+        transcribed by hand</strong>. Rendered visualizations land in <code>outputs/</code> (gitignored — full videos, every
+        frame), and <code>make_figures.py</code> curates the seven committed figures above into <code>figures/</code>.</p>
+    </div>
+    <details class="col" style="max-width:none" open>
+      <summary>A single RefDrone record — this is the shape of the output</summary>
+      <pre><code>{
+  <span class="kw">"split"</span>: "train",
+  <span class="kw">"file_name"</span>: "0000309_04401_d_0000355.jpg",
+  <span class="kw">"expression"</span>: "The black cars near the intersection.",
+  <span class="kw">"n_gt_boxes"</span>: 1,
+  <span class="kw">"n_detections"</span>: 10,          <span class="cmt">// GD found ten "cars"</span>
+  <span class="kw">"top_score"</span>: 0.5057,        <span class="cmt">// and was confident about the wrong one</span>
+  <span class="kw">"pred_box"</span>: [652.9, 326.4, 731.1, 396.2],
+  <span class="kw">"best_iou"</span>: 0.0,            <span class="cmt">// &lt;-- zero overlap with the referent</span>
+  <span class="kw">"hit_at_50"</span>: false,
+  <span class="kw">"gd_latency_ms"</span>: 101.6,
+  <span class="kw">"sam2_latency_ms"</span>: 23.7,
+  <span class="kw">"mask_pixels"</span>: 3220         <span class="cmt">// a perfect mask, on the wrong car</span>
+}</code></pre>
+    </details>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>File</th><th>What's in it</th></tr></thead>
+        <tbody>
+          <tr><td>results/refdrone_results.json</td><td>50 records like the above + aggregate metrics</td></tr>
+          <tr><td>results/video_results_*.json</td><td>per-frame area, bbox, centroid; gap classification</td></tr>
+          <tr><td>results/benchmark.json / .csv</td><td>config A vs B, load / cold / warm / p95</td></tr>
+          <tr><td>results/environment.json</td><td>GPU, driver, versions, CUDA-ext + network posture</td></tr>
+          <tr><td>results/summary.md</td><td>the full write-up, generated from the above</td></tr>
+          <tr><td>figures/01–07</td><td>the seven curated figures on this page</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="col sec-head">
+      <span class="eyebrow">Two things that will bite on a fresh machine</span>
+      <h2>Operational gotchas</h2>
+    </div>
+    <div class="col">
+      <ul class="clean">
+        <li><strong>It was not air-gap clean by default.</strong> Measured with <code>strace</code>, not assumed: an unguarded
+          run opens real outbound connections to <code>huggingface.co</code>, because Grounding DINO's text encoder
+          calls <code>from_pretrained("bert-base-uncased")</code> and transformers <i>revalidates the cached files
+          against the hub on every load</i>. No imagery is uploaded — it is a metadata fetch — but it is a
+          blocker for an air-gapped target. The adapter now forces <code>HF_HUB_OFFLINE=1</code> before transformers
+          imports; re-verified with strace as <b>zero</b> <code>AF_INET connect()</code> syscalls, identical detections.</li>
+        <li><strong>The BERT text encoder is not in <code>checkpoints/</code>.</strong> It lives in <code>~/.cache/huggingface</code>
+          (~421 MB) and must be staged separately on an air-gapped device, or Grounding DINO will not load
+          at all.</li>
+        <li><strong>The <code>MultiScaleDeformableAttention</code> CUDA extension must be compiled</strong> for the target's
+          compute capability. Upstream's pure-PyTorch fallback is gated on <code>torch.cuda.is_available()</code> —
+          <i>not</i> on whether the extension loaded — so on a GPU box without it, Grounding DINO <b>crashes rather
+          than degrading</b>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="col sec-head">
+      <span class="eyebrow">The verdict</span>
+      <h2>Promising — but scoped</h2>
+    </div>
+    <div class="col">
+      <p>The engineering holds up. Fully local, 32 FPS tracking, 2.1 GB peak VRAM, excellent segmentation,
+        a sound and cheap architecture, and it degrades <i>honestly</i> — it raises rather than silently
+        falling back to CPU. Prompted with <code>car</code> or <code>person</code>, it works, and the VRAM/throughput
+        envelope fits a Jetson-class target.</p>
+      <p>But if the intended capability is <i>"describe one specific object in natural language and track
+        it,"</i> <strong>this pipeline does not deliver that today</strong> — and no amount of SAM 2 tuning will change
+        it, because SAM 2 is not what is failing.</p>
+      <p>The reason this lands on <strong>PROMISING</strong> rather than <i>reference only</i> is worth stating plainly:
+        <strong>the weak component is the replaceable one.</strong> The expensive, hard part — real-time memory-based
+        segmentation that survives occlusion — is the part that works.</p>
+      <h3 style="margin-top:30px">If this continues, fix in this order</h3>
+      <ul class="clean">
+        <li><strong>Replace the language-grounding stage.</strong> It is the bottleneck for both accuracy (22%) <i>and</i>
+          latency (70% of per-image cost). One swap addresses both.</li>
+        <li><strong>Add a re-detection / identity-verification trigger.</strong> Mask area collapse, mask clipped by a
+          border, or an N-frame gap should force re-acquisition instead of letting SAM 2 re-bind to
+          whatever wanders into view. Cheap, and it directly kills the frame-176 failure.</li>
+        <li><strong>Only then</strong> worry about the SAM 2 backbone.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Source: experiments/grounded_sam2_local/ · results/summary.md · NVIDIA GeForce RTX 3080 (sm_86), driver 580.95.05<br>
+    torch 2.5.1+cu124 · transformers 4.44.2 · GD CUDA extension COMPILED · cloud SDK NOT installed<br>
+    Every figure and every number on this page is read from a committed result file.
+  </footer>
+</div>
+
+<script>
+(function () {
+  const AREA = [1592, 1599, 1658, 1664, 1702, 1777, 1812, 1870, 1873, 1889, 1950, 2067, 2164, 2341, 2409, 2412, 2511, 2545, 2673, 2707, 2772, 2782, 3048, 3112, 3105, 3320, 3392, 3375, 3510, 3864, 4027, 4172, 4322, 4299, 4714, 4914, 5355, 5783, 6173, 6601, 6590, 7168, 7739, 8386, 8975, 9886, 9975, 10706, 11659, 12897, 14365, 15275, 15203, 17102, 19707, 22181, 24704, 28377, 28537, 32764, 38635, 45561, 53635, 64612, 64634, 70482, 57526, 40574, 17704, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1509, 1532, 1458, 1355, 1522, 1470, 1508, 1705, 1706, 1714, 1743, 1769, 1735, 1825, 1832, 1877, 2092, 2011, 2303, 2391, 2603, 2621, 2756, 2858];
+  const svg = document.getElementById('chart');
+  const tip = document.getElementById('tip');
+  const NS = 'http://www.w3.org/2000/svg';
+
+  const W = 880, H = 300;
+  const M = { t: 18, r: 18, b: 34, l: 58 };
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  const n = AREA.length;
+  const yMax = 80000;
+
+  const X = i => M.l + (i / (n - 1)) * iw;
+  const Y = v => M.t + ih - (v / yMax) * ih;
+
+  const el = (name, attrs, parent) => {
+    const e = document.createElementNS(NS, name);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    (parent || svg).appendChild(e);
+    return e;
+  };
+
+  // --- recessive grid + y axis ---
+  for (let v = 0; v <= yMax; v += 20000) {
+    el('line', { class: 'gridline', x1: M.l, x2: M.l + iw, y1: Y(v), y2: Y(v) });
+    el('text', { class: 'axis', x: M.l - 10, y: Y(v) + 3.5, 'text-anchor': 'end' })
+      .textContent = v === 0 ? '0' : (v / 1000) + 'k';
+  }
+  el('text', { class: 'axis', x: M.l - 10, y: M.t - 6, 'text-anchor': 'end' }).textContent = 'px';
+
+  // --- x axis ---
+  [0, 50, 100, 150, 199].forEach(i => {
+    el('text', { class: 'axis', x: X(i), y: M.t + ih + 18, 'text-anchor': 'middle' })
+      .textContent = 'f' + i;
+  });
+
+  // --- the series: area fill + 2px line ---
+  let d = '';
+  AREA.forEach((v, i) => { d += (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1) + ' '; });
+  const fillD = d + 'L' + X(n - 1).toFixed(1) + ' ' + Y(0) + ' L' + X(0).toFixed(1) + ' ' + Y(0) + ' Z';
+
+  const grad = el('linearGradient', { id: 'g', x1: 0, y1: 0, x2: 0, y2: 1 }, el('defs', {}));
+  el('stop', { offset: '0%', 'stop-color': 'var(--mark-green)', 'stop-opacity': .28 }, grad);
+  el('stop', { offset: '100%', 'stop-color': 'var(--mark-green)', 'stop-opacity': .02 }, grad);
+
+  el('path', { d: fillD, fill: 'url(#g)', stroke: 'none' });
+  el('path', { d: d, fill: 'none', stroke: 'var(--mark-green)', 'stroke-width': 2,
+               'stroke-linejoin': 'round', 'stroke-linecap': 'round' });
+
+  // --- annotations: status colour + a written label, never colour alone ---
+  const anno = (i, colour, label, dy, anchor) => {
+    el('line', { x1: X(i), x2: X(i), y1: M.t, y2: M.t + ih,
+                 stroke: colour, 'stroke-width': 1.5, 'stroke-dasharray': '3 3', opacity: .85 });
+    el('circle', { cx: X(i), cy: Y(AREA[i]), r: 4, fill: colour,
+                   stroke: 'var(--surface)', 'stroke-width': 2 });
+    const t = el('text', { class: 'anno-lbl', x: X(i) + (anchor === 'end' ? -8 : 8),
+                           y: M.t + dy, 'text-anchor': anchor, fill: colour });
+    label.split('|').forEach((line, k) => {
+      const ts = el('tspan', { x: X(i) + (anchor === 'end' ? -8 : 8), dy: k ? 13 : 0 }, t);
+      ts.textContent = line;
+    });
+  };
+  // Both labels live in the frames 70-175 dead band (mask area is 0 there, so the
+  // plot is empty): f69's runs right of its rule, f176's runs left of its rule.
+  // Anchoring f69's label to the LEFT would drive it through the rising curve.
+  anno(68, 'var(--mark-amber)', 'f69 TARGET EXITS FRAME|mask clipped by bottom border|107 empty frames = CORRECT', 28, 'start');
+  anno(176, 'var(--mark-rust)', 'f176 IDENTITY SWITCH|different car, 953 px away|reported with full confidence', 112, 'end');
+
+  // peak of the clean track, direct-labelled (left of the curve, clear of the rise)
+  const pk = AREA.indexOf(Math.max.apply(null, AREA));
+  el('text', { class: 'anno-lbl', x: X(pk) - 10, y: Y(AREA[pk]) - 8, 'text-anchor': 'end',
+               fill: 'var(--mark-green)' }).textContent = '70,482 px';
+
+  // --- hover layer: crosshair + tooltip ---
+  const hl = el('line', { y1: M.t, y2: M.t + ih, stroke: 'var(--muted)',
+                          'stroke-width': 1, opacity: 0 });
+  const hd = el('circle', { r: 4.5, fill: 'var(--mark-green)', stroke: 'var(--surface)',
+                            'stroke-width': 2, opacity: 0 });
+  const hit = el('rect', { x: M.l, y: M.t, width: iw, height: ih, fill: 'transparent',
+                           style: 'cursor:crosshair' });
+
+  hit.addEventListener('mousemove', ev => {
+    const r = svg.getBoundingClientRect();
+    const px = (ev.clientX - r.left) * (W / r.width);
+    let i = Math.round(((px - M.l) / iw) * (n - 1));
+    i = Math.max(0, Math.min(n - 1, i));
+    const v = AREA[i];
+    hl.setAttribute('x1', X(i)); hl.setAttribute('x2', X(i)); hl.setAttribute('opacity', .45);
+    hd.setAttribute('cx', X(i)); hd.setAttribute('cy', Y(v)); hd.setAttribute('opacity', 1);
+    let note = '';
+    if (v === 0) note = '  ·  no mask';
+    if (i >= 176) note = '  ·  DIFFERENT CAR';
+    tip.style.opacity = 1;
+    tip.textContent = 'frame ' + i + '  ·  ' + v.toLocaleString() + ' px' + note;
+    const tw = tip.offsetWidth;
+    tip.style.left = Math.min(Math.max((X(i) / W) * r.width - tw / 2, 0), r.width - tw) + 'px';
+    tip.style.top = ((Y(v) / H) * r.height - 44) + 'px';
+  });
+  hit.addEventListener('mouseleave', () => {
+    tip.style.opacity = 0; hl.setAttribute('opacity', 0); hd.setAttribute('opacity', 0);
+  });
+})();
+</script>
+
+</body>
+</html>

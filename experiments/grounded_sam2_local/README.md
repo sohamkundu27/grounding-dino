@@ -7,7 +7,9 @@ text prompt -> Grounding DINO 1.0 (local) -> box -> SAM 2.1 (local) -> mask / vi
 ```
 
 **Read [`results/summary.md`](results/summary.md) for the findings and the final
-classification.** The short version: PROMISING as a *category-prompted* detect-and-track
+classification**, or open [`explainer.html`](explainer.html) in a browser for the same
+material as a visual walk-through (pipeline diagram, the seven figures, and the per-frame
+mask-area chart that shows the identity switch). The short version: PROMISING as a *category-prompted* detect-and-track
 pipeline (32 FPS tracking, 2.1 GB VRAM, excellent masks); **not usable as a
 referring-expression system** (22% top-1 on RefDrone — Grounding DINO 1.0 resolves the
 category and ignores the referring qualifiers).
@@ -49,6 +51,7 @@ Enforcement is not just convention:
 | `scripts/make_figures.py` | curates `figures/` from `outputs/` |
 | `results/` | committed JSON/CSV + `summary.md` |
 | `figures/` | committed, downscaled representative visualizations |
+| `explainer.html` | standalone visual walk-through — pipeline, figures, per-frame tracking chart. Open it in a browser; it reads `figures/` from disk and needs no server. |
 | `outputs/` | **gitignored** — full videos, every frame, every visualization |
 
 ## Run it
