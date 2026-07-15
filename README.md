@@ -214,16 +214,37 @@ tracked.
 - Nothing here calls `torch.load`, imports model code, or runs inference.
 - **No proprietary Honeywell / Shield AI / Hivemind material in this repo.**
 
+cd /home/appuser/Grounded-SAM-2/grounding_dino
 
-FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-devel
+export CUDA_HOME=/usr/local/cuda
+export PATH=/usr/local/cuda/bin:$PATH
+export LD_LIBRARY_PATH=/opt/conda/lib/python3.11/site-packages/torch/lib:/usr/local/cuda/lib64:${LD_LIBRARY_PATH:-}
+export TORCH_CUDA_ARCH_LIST="9.0"
+export FORCE_CUDA=1
 
-ARG USE_CUDA=0
-ARG TORCH_ARCH="7.0;7.5;8.0;8.6"
+python - <<'PY'
+import os
+import torch
 
-ENV AM_I_DOCKER=True
-ENV BUILD_WITH_CUDA="${USE_CUDA}"
-ENV TORCH_CUDA_ARCH_LIST="${TORCH_ARCH}"
+print("PyTorch CUDA:", torch.version.cuda)
+print("CUDA available:", torch.cuda.is_available())
+print("GPU:", torch.cuda.get_device_name(0))
+print("Capability:", torch.cuda.get_device_capability(0))
+print("TORCH_CUDA_ARCH_LIST:", os.environ.get("TORCH_CUDA_ARCH_LIST"))
+PY
 
-ENV CUDA_HOME=/usr/local/cuda
-ENV PATH=${CUDA_HOME}/bin:${PATH}
-ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+Capability: (9, 0)
+TORCH_CUDA_ARCH_LIST: 9.0
+
+python -m pip uninstall -y groundingdino
+
+rm -rf build dist *.egg-info
+find . -type f \( -name "_C*.so" -o -name "*.o" -o -name "*.a" \) -delete
+rm -rf ~/.cache/torch_extensions
+
+python setup.py build_ext --inplace --force -v
+python -m pip install --no-build-isolation --no-deps -e .
+
+python -c "from groundingdino import _C; print('Grounding DINO extension imported')"
+
+cuobjdump --list-elf groundingdino/_C*.so | grep -E "sm_90|compute_90"
