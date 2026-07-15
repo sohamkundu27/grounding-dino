@@ -1,0 +1,77 @@
+{
+  "pipeline": "Grounded SAM (v1): Grounding DINO 1.0 Swin-T + SAM v1 (ViT-B / ViT-H)",
+  "detector_shared_with_sam2_eval": {
+    "identical": true,
+    "config": "third_party/grounded_sam_2/grounding_dino/groundingdino/config/GroundingDINO_SwinT_OGC.py",
+    "checkpoint": "checkpoints/grounding_dino/groundingdino_swint_ogc.pth",
+    "imported_from": "third_party/grounded_sam_2 (same build, same compiled _C ext)",
+    "why": "holding the detector byte-identical to the SAM 2 evaluation makes the comparison clean: any difference is attributable to the SAM stage alone"
+  },
+  "machine": {
+    "hostname": "SohamPC",
+    "os": "Linux-6.14.0-37-generic-x86_64-with-glibc2.39",
+    "cpu": "12th Gen Intel(R) Core(TM) i9-12900K",
+    "ram_gb": 62.5
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3080",
+    "compute_capability": "sm_86",
+    "torch_cuda_arch_list_used": "8.6",
+    "total_vram_mb": 11911,
+    "driver": "580.95.05"
+  },
+  "python": "3.12.3",
+  "venv": "/home/soham/grounding-dino/.venv-grounded-sam2",
+  "packages": {
+    "torch": "2.5.1+cu124",
+    "torch_cuda_build": "12.4",
+    "torchvision": "0.20.1+cu124",
+    "cuda_runtime_available": true,
+    "cudnn": 90100,
+    "transformers": "4.44.2",
+    "numpy": "2.4.4",
+    "opencv_python": "5.0.0.93",
+    "supervision": "0.29.1",
+    "timm": "1.0.28",
+    "groundingdino": "0.1.0",
+    "segment_anything": null
+  },
+  "grounding_dino_cuda_extension": {
+    "compiled": true,
+    "path": "/home/soham/grounding-dino/third_party/grounded_sam_2/grounding_dino/groundingdino/_C.cpython-312-x86_64-linux-gnu.so",
+    "has_ms_deform_attn_forward": true
+  },
+  "sam_v1": {
+    "package_path": "/home/soham/grounding-dino/third_party/grounded_sam/segment_anything/segment_anything/__init__.py",
+    "checkpoints": {
+      "vit_b": "checkpoints/sam/sam_vit_b_01ec64.pth",
+      "vit_h": "checkpoints/sam/sam_vit_h_4b8939.pth"
+    },
+    "params_millions": {
+      "vit_b": 93.7,
+      "vit_h": 641.1
+    },
+    "has_build_sam2_video_predictor": false,
+    "has_image_predictor": true,
+    "has_automatic_mask_generator": true,
+    "note": "SAM v1 is image-only: no memory, no init_state, no propagate_in_video."
+  },
+  "commits": {
+    "repo": "88ae913dc553768fe0aad024774b97db7ac5f6bb",
+    "grounded_sam": "126abe633ffe333e16e4a0a4e946bc1003caf757",
+    "grounded_sam_2_detector": "b7a9c29f196edff0eb54dbe14588d7ae5e3dde28"
+  },
+  "network": {
+    "offline_enforced_by_adapter": true,
+    "bert_in_local_hf_cache": true,
+    "bert_cache_dir": "/home/soham/.cache/huggingface",
+    "finding": "Same posture as the SAM 2 evaluation: Grounding DINO's text encoder calls transformers from_pretrained('bert-base-uncased'), which REVALIDATES the cached files against huggingface.co on every load (real outbound :443, confirmed by strace there). No imagery is uploaded, but the pipeline is NOT network-free by default. This is a detector property, so it is identical here.",
+    "mitigation": "gsam_local sets HF_HUB_OFFLINE/TRANSFORMERS_OFFLINE=1 at import, before transformers loads."
+  },
+  "local_only": {
+    "cloud_sdk_installed": null,
+    "confirmed_no_cloud_packages": true,
+    "entry_point": "experiments/grounded_sam_local/scripts/* (adapter: gsam_local.py)",
+    "no_upstream_file_modified": true
+  }
+}

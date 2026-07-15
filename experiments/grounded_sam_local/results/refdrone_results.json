@@ -1,0 +1,1176 @@
+{
+  "sample": {
+    "n": 50,
+    "seed": 1234,
+    "by_split": {
+      "train": 30,
+      "val": 10,
+      "test": 10
+    }
+  },
+  "config": {
+    "gd": "Swin-T",
+    "sam": "vit_b",
+    "box_threshold": 0.25,
+    "text_threshold": 0.2
+  },
+  "detector_note": "Grounding DINO stage is identical to the SAM 2 evaluation (same build, config, checkpoint, thresholds and seed). The localization metrics below are a property of the detector and are expected to equal the SAM 2 run's. Only mask_pixels and sam_latency_ms belong to the SAM v1 stage.",
+  "metrics": {
+    "top1_localization_acc_iou50": 0.22,
+    "mean_best_iou": 0.2118,
+    "median_best_iou": 0.0036,
+    "no_detection_rate": 0.04,
+    "multiple_detection_rate": 0.84,
+    "mean_detections_when_found": 5.25,
+    "mean_gd_latency_ms": 103.9,
+    "mean_sam_latency_ms": 106.6,
+    "mean_total_latency_ms": 206.2
+  },
+  "gpu_memory": {
+    "peak_allocated_mb": 3518.2,
+    "peak_reserved_mb": 4300.0
+  },
+  "mask_ground_truth": "NONE \u2014 RefDrone provides boxes only. SAM v1 mask quality is assessed visually and is NOT scored here.",
+  "results": [
+    {
+      "split": "train",
+      "file_name": "9999999_00564_d_0000254.jpg",
+      "expression": "The blue vehicles in the image.",
+      "resolution": [
+        2000,
+        1500
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 1,
+      "top_score": 0.4568,
+      "pred_box": [
+        1446.1,
+        855.9,
+        1690.9,
+        1021.2
+      ],
+      "best_iou": 0.8431,
+      "hit_at_50": true,
+      "gd_latency_ms": 322.5,
+      "sam_latency_ms": 129.7,
+      "mask_pixels": 13582
+    },
+    {
+      "split": "train",
+      "file_name": "9999962_00000_d_0000022.jpg",
+      "expression": "The blue vehicles in the image.",
+      "resolution": [
+        1400,
+        1050
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 1,
+      "top_score": 0.2517,
+      "pred_box": [
+        23.1,
+        15.8,
+        1382.7,
+        1044.5
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 90.6,
+      "sam_latency_ms": 106.8,
+      "mask_pixels": 689445
+    },
+    {
+      "split": "train",
+      "file_name": "0000309_04401_d_0000355.jpg",
+      "expression": "The black cars near the intersection.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 10,
+      "top_score": 0.5057,
+      "pred_box": [
+        652.9,
+        326.4,
+        731.1,
+        396.2
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 101.0,
+      "sam_latency_ms": 104.0,
+      "mask_pixels": 3064
+    },
+    {
+      "split": "train",
+      "file_name": "0000072_05827_d_0000009.jpg",
+      "expression": "The tricycle and people are near each other on the right side of the image.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 2,
+      "n_detections": 6,
+      "top_score": 0.3957,
+      "pred_box": [
+        332.1,
+        511.9,
+        382.0,
+        623.8
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 112.2,
+      "sam_latency_ms": 104.1,
+      "mask_pixels": 1715
+    },
+    {
+      "split": "train",
+      "file_name": "0000261_00601_d_0000122.jpg",
+      "expression": "The pedestrians walk near the bottom right corner of the image.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 4,
+      "n_detections": 6,
+      "top_score": 0.5782,
+      "pred_box": [
+        1089.3,
+        487.0,
+        1126.8,
+        553.8
+      ],
+      "best_iou": 0.4682,
+      "hit_at_50": false,
+      "gd_latency_ms": 101.4,
+      "sam_latency_ms": 104.8,
+      "mask_pixels": 703
+    },
+    {
+      "split": "train",
+      "file_name": "9999982_00000_d_0000002.jpg",
+      "expression": "The red cars parked on the left side the image.",
+      "resolution": [
+        1400,
+        1050
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 2,
+      "top_score": 0.3642,
+      "pred_box": [
+        4.2,
+        742.8,
+        236.5,
+        977.5
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 89.6,
+      "sam_latency_ms": 106.1,
+      "mask_pixels": 11448
+    },
+    {
+      "split": "train",
+      "file_name": "0000165_06125_d_0000114.jpg",
+      "expression": "The blue cars driving along the road.",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "n_gt_boxes": 2,
+      "n_detections": 3,
+      "top_score": 0.3305,
+      "pred_box": [
+        11.3,
+        560.2,
+        1002.1,
+        1075.5
+      ],
+      "best_iou": 0.0147,
+      "hit_at_50": false,
+      "gd_latency_ms": 101.0,
+      "sam_latency_ms": 107.0,
+      "mask_pixels": 212758
+    },
+    {
+      "split": "train",
+      "file_name": "9999991_00000_d_0000015.jpg",
+      "expression": "The blue cars park along the street and curbside.",
+      "resolution": [
+        1400,
+        1050
+      ],
+      "n_gt_boxes": 8,
+      "n_detections": 8,
+      "top_score": 0.5717,
+      "pred_box": [
+        3.6,
+        321.6,
+        1394.4,
+        1046.6
+      ],
+      "best_iou": 0.0081,
+      "hit_at_50": false,
+      "gd_latency_ms": 89.8,
+      "sam_latency_ms": 106.7,
+      "mask_pixels": 383237
+    },
+    {
+      "split": "train",
+      "file_name": "9999997_00000_d_0000036.jpg",
+      "expression": "The white truck travels on the same road as the black cars.",
+      "resolution": [
+        1400,
+        1050
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 6,
+      "top_score": 0.4222,
+      "pred_box": [
+        595.4,
+        928.4,
+        715.7,
+        999.4
+      ],
+      "best_iou": 0.8107,
+      "hit_at_50": true,
+      "gd_latency_ms": 89.6,
+      "sam_latency_ms": 106.8,
+      "mask_pixels": 3989
+    },
+    {
+      "split": "train",
+      "file_name": "0000257_00249_d_0000043.jpg",
+      "expression": "The trucks are in the congested lane.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 6,
+      "n_detections": 7,
+      "top_score": 0.3807,
+      "pred_box": [
+        702.9,
+        576.7,
+        758.4,
+        665.6
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 101.2,
+      "sam_latency_ms": 104.5,
+      "mask_pixels": 1750
+    },
+    {
+      "split": "train",
+      "file_name": "0000273_03001_d_0000454.jpg",
+      "expression": "The blue trucks are spread across multiple lanes.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 2,
+      "n_detections": 7,
+      "top_score": 0.4957,
+      "pred_box": [
+        3.0,
+        330.8,
+        1356.4,
+        762.0
+      ],
+      "best_iou": 0.0045,
+      "hit_at_50": false,
+      "gd_latency_ms": 100.9,
+      "sam_latency_ms": 103.8,
+      "mask_pixels": 350052
+    },
+    {
+      "split": "train",
+      "file_name": "9999999_00318_d_0000139.jpg",
+      "expression": "The black vehicles parked along the street.",
+      "resolution": [
+        2000,
+        1500
+      ],
+      "n_gt_boxes": 2,
+      "n_detections": 3,
+      "top_score": 0.3608,
+      "pred_box": [
+        750.6,
+        592.6,
+        970.6,
+        783.4
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 89.4,
+      "sam_latency_ms": 111.3,
+      "mask_pixels": 22401
+    },
+    {
+      "split": "train",
+      "file_name": "9999955_00000_d_0000040.jpg",
+      "expression": "The van parked in front of a building on the right side.",
+      "resolution": [
+        1400,
+        788
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 5,
+      "top_score": 0.3674,
+      "pred_box": [
+        649.2,
+        558.0,
+        687.5,
+        613.7
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 105.2,
+      "sam_latency_ms": 108.1,
+      "mask_pixels": 1163
+    },
+    {
+      "split": "train",
+      "file_name": "9999942_00000_d_0000206.jpg",
+      "expression": "The pedestrians are walking in the middle of the street.",
+      "resolution": [
+        1400,
+        1050
+      ],
+      "n_gt_boxes": 2,
+      "n_detections": 8,
+      "top_score": 0.5312,
+      "pred_box": [
+        594.4,
+        393.2,
+        639.7,
+        470.8
+      ],
+      "best_iou": 0.4838,
+      "hit_at_50": false,
+      "gd_latency_ms": 91.2,
+      "sam_latency_ms": 107.3,
+      "mask_pixels": 1292
+    },
+    {
+      "split": "train",
+      "file_name": "0000123_01819_d_0000120.jpg",
+      "expression": "The red cars near the building on the right.",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "n_gt_boxes": 2,
+      "n_detections": 6,
+      "top_score": 0.4567,
+      "pred_box": [
+        1364.1,
+        3.2,
+        1916.1,
+        1076.1
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 103.8,
+      "sam_latency_ms": 107.1,
+      "mask_pixels": 549453
+    },
+    {
+      "split": "train",
+      "file_name": "0000156_00154_d_0000077.jpg",
+      "expression": "The blue cars are located on the left side of the image.",
+      "resolution": [
+        960,
+        540
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 2,
+      "top_score": 0.3504,
+      "pred_box": [
+        548.7,
+        193.7,
+        583.7,
+        223.0
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.1,
+      "sam_latency_ms": 102.5,
+      "mask_pixels": 570
+    },
+    {
+      "split": "train",
+      "file_name": "9999999_00753_d_0000344.jpg",
+      "expression": "The red cars park on the street.",
+      "resolution": [
+        2000,
+        1500
+      ],
+      "n_gt_boxes": 2,
+      "n_detections": 0,
+      "top_score": null,
+      "pred_box": null,
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 90.1,
+      "sam_latency_ms": null,
+      "mask_pixels": null
+    },
+    {
+      "split": "train",
+      "file_name": "0000109_03179_d_0000064.jpg",
+      "expression": "The cars parked along the left side of the street.",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "n_gt_boxes": 6,
+      "n_detections": 2,
+      "top_score": 0.2706,
+      "pred_box": [
+        16.4,
+        293.2,
+        1299.9,
+        1070.3
+      ],
+      "best_iou": 0.0111,
+      "hit_at_50": false,
+      "gd_latency_ms": 101.4,
+      "sam_latency_ms": 109.0,
+      "mask_pixels": 595601
+    },
+    {
+      "split": "train",
+      "file_name": "9999953_00000_d_0000187.jpg",
+      "expression": "The car on the elevated road.",
+      "resolution": [
+        1400,
+        788
+      ],
+      "n_gt_boxes": 3,
+      "n_detections": 2,
+      "top_score": 0.5779,
+      "pred_box": [
+        766.9,
+        679.8,
+        805.1,
+        740.1
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 101.8,
+      "sam_latency_ms": 104.8,
+      "mask_pixels": 1291
+    },
+    {
+      "split": "train",
+      "file_name": "9999987_00000_d_0000001.jpg",
+      "expression": "The pedestrians walk in the image.",
+      "resolution": [
+        1400,
+        1050
+      ],
+      "n_gt_boxes": 23,
+      "n_detections": 5,
+      "top_score": 0.3135,
+      "pred_box": [
+        6.5,
+        14.2,
+        1392.0,
+        1043.3
+      ],
+      "best_iou": 0.0008,
+      "hit_at_50": false,
+      "gd_latency_ms": 90.1,
+      "sam_latency_ms": 106.5,
+      "mask_pixels": 494396
+    },
+    {
+      "split": "train",
+      "file_name": "9999984_00000_d_0000065.jpg",
+      "expression": "The white car is located near the bottom center of the image.",
+      "resolution": [
+        1400,
+        1050
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 1,
+      "top_score": 0.6707,
+      "pred_box": [
+        851.8,
+        967.6,
+        914.5,
+        1046.5
+      ],
+      "best_iou": 0.8278,
+      "hit_at_50": true,
+      "gd_latency_ms": 90.4,
+      "sam_latency_ms": 107.0,
+      "mask_pixels": 2635
+    },
+    {
+      "split": "train",
+      "file_name": "9999966_00000_d_0000021.jpg",
+      "expression": "The van parked on the right side of the image.",
+      "resolution": [
+        1400,
+        1050
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 1,
+      "top_score": 0.8248,
+      "pred_box": [
+        1108.6,
+        288.6,
+        1218.7,
+        346.1
+      ],
+      "best_iou": 0.8481,
+      "hit_at_50": true,
+      "gd_latency_ms": 90.1,
+      "sam_latency_ms": 107.1,
+      "mask_pixels": 4275
+    },
+    {
+      "split": "train",
+      "file_name": "9999984_00000_d_0000012.jpg",
+      "expression": "The trucks are located on the road below the elevated structure.",
+      "resolution": [
+        1400,
+        1050
+      ],
+      "n_gt_boxes": 3,
+      "n_detections": 4,
+      "top_score": 0.4242,
+      "pred_box": [
+        538.4,
+        608.8,
+        660.8,
+        752.4
+      ],
+      "best_iou": 0.8265,
+      "hit_at_50": true,
+      "gd_latency_ms": 91.2,
+      "sam_latency_ms": 107.5,
+      "mask_pixels": 5209
+    },
+    {
+      "split": "train",
+      "file_name": "9999964_00000_d_0000036.jpg",
+      "expression": "The white cars park along the side of the road and in front of the shops.",
+      "resolution": [
+        1400,
+        1050
+      ],
+      "n_gt_boxes": 7,
+      "n_detections": 10,
+      "top_score": 0.5771,
+      "pred_box": [
+        722.6,
+        84.7,
+        1395.9,
+        1047.0
+      ],
+      "best_iou": 0.0181,
+      "hit_at_50": false,
+      "gd_latency_ms": 99.6,
+      "sam_latency_ms": 106.4,
+      "mask_pixels": 199485
+    },
+    {
+      "split": "train",
+      "file_name": "0000348_03137_d_0000422.jpg",
+      "expression": "The pedestrians scattered throughout the park.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 11,
+      "n_detections": 14,
+      "top_score": 0.5611,
+      "pred_box": [
+        49.8,
+        320.1,
+        96.2,
+        379.2
+      ],
+      "best_iou": 0.5747,
+      "hit_at_50": true,
+      "gd_latency_ms": 104.2,
+      "sam_latency_ms": 104.5,
+      "mask_pixels": 780
+    },
+    {
+      "split": "train",
+      "file_name": "0000261_02001_d_0000126.jpg",
+      "expression": "The pedestrians walk through the parking lot.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 2,
+      "n_detections": 6,
+      "top_score": 0.7391,
+      "pred_box": [
+        684.5,
+        162.1,
+        716.5,
+        222.7
+      ],
+      "best_iou": 0.438,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.1,
+      "sam_latency_ms": 104.7,
+      "mask_pixels": 502
+    },
+    {
+      "split": "train",
+      "file_name": "9999937_00000_d_0000147.jpg",
+      "expression": "The white vans park along the roadside.",
+      "resolution": [
+        1916,
+        1078
+      ],
+      "n_gt_boxes": 2,
+      "n_detections": 8,
+      "top_score": 0.4012,
+      "pred_box": [
+        694.9,
+        878.8,
+        832.4,
+        976.7
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 101.9,
+      "sam_latency_ms": 107.7,
+      "mask_pixels": 6090
+    },
+    {
+      "split": "train",
+      "file_name": "9999998_00182_d_0000146.jpg",
+      "expression": "The cars parked along the street.",
+      "resolution": [
+        2000,
+        1500
+      ],
+      "n_gt_boxes": 6,
+      "n_detections": 1,
+      "top_score": 0.4306,
+      "pred_box": [
+        78.5,
+        664.5,
+        1990.4,
+        1491.2
+      ],
+      "best_iou": 0.0227,
+      "hit_at_50": false,
+      "gd_latency_ms": 90.2,
+      "sam_latency_ms": 112.3,
+      "mask_pixels": 705834
+    },
+    {
+      "split": "train",
+      "file_name": "0000308_01801_d_0000314.jpg",
+      "expression": "The tricycles painted blue.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 3,
+      "n_detections": 6,
+      "top_score": 0.582,
+      "pred_box": [
+        434.0,
+        250.7,
+        590.6,
+        337.8
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.0,
+      "sam_latency_ms": 105.4,
+      "mask_pixels": 7812
+    },
+    {
+      "split": "train",
+      "file_name": "0000102_02749_d_0000024.jpg",
+      "expression": "Pedestrian wearing white closer to the center.",
+      "resolution": [
+        960,
+        540
+      ],
+      "n_gt_boxes": 2,
+      "n_detections": 3,
+      "top_score": 0.3893,
+      "pred_box": [
+        90.9,
+        433.0,
+        137.5,
+        520.6
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.4,
+      "sam_latency_ms": 103.4,
+      "mask_pixels": 1857
+    },
+    {
+      "split": "val",
+      "file_name": "0000316_01201_d_0000525.jpg",
+      "expression": "The yellow car near the bottom left.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 2,
+      "top_score": 0.3924,
+      "pred_box": [
+        1042.6,
+        573.8,
+        1150.1,
+        622.2
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.1,
+      "sam_latency_ms": 105.1,
+      "mask_pixels": 3423
+    },
+    {
+      "split": "val",
+      "file_name": "0000312_01001_d_0000419.jpg",
+      "expression": "The black cars park in the plaza.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 5,
+      "n_detections": 20,
+      "top_score": 0.5719,
+      "pred_box": [
+        205.5,
+        407.9,
+        332.5,
+        506.9
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.8,
+      "sam_latency_ms": 104.6,
+      "mask_pixels": 5665
+    },
+    {
+      "split": "val",
+      "file_name": "0000271_05001_d_0000397.jpg",
+      "expression": "The black car is in the middle of the street.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 4,
+      "top_score": 0.4319,
+      "pred_box": [
+        546.7,
+        387.2,
+        603.5,
+        464.9
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.3,
+      "sam_latency_ms": 104.8,
+      "mask_pixels": 2335
+    },
+    {
+      "split": "val",
+      "file_name": "0000103_00502_d_0000027.jpg",
+      "expression": "The white car parks on the paved area.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 2,
+      "top_score": 0.7934,
+      "pred_box": [
+        8.6,
+        44.4,
+        558.9,
+        341.8
+      ],
+      "best_iou": 0.9826,
+      "hit_at_50": true,
+      "gd_latency_ms": 102.6,
+      "sam_latency_ms": 104.9,
+      "mask_pixels": 96537
+    },
+    {
+      "split": "val",
+      "file_name": "0000360_03137_d_0000729.jpg",
+      "expression": "The red cars are visible in the traffic.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 4,
+      "n_detections": 1,
+      "top_score": 0.3901,
+      "pred_box": [
+        354.9,
+        3.7,
+        1053.9,
+        759.1
+      ],
+      "best_iou": 0.0037,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.4,
+      "sam_latency_ms": 105.4,
+      "mask_pixels": 167404
+    },
+    {
+      "split": "val",
+      "file_name": "0000330_01001_d_0000805.jpg",
+      "expression": "The red cars park on the right side of the street.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 3,
+      "top_score": 0.3632,
+      "pred_box": [
+        184.8,
+        4.0,
+        1049.9,
+        761.4
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.9,
+      "sam_latency_ms": 105.6,
+      "mask_pixels": 288705
+    },
+    {
+      "split": "val",
+      "file_name": "0000295_02200_d_0000032.jpg",
+      "expression": "The white cars on the left side of the intersection.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 7,
+      "n_detections": 2,
+      "top_score": 0.3938,
+      "pred_box": [
+        543.0,
+        378.8,
+        924.5,
+        759.2
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.6,
+      "sam_latency_ms": 104.5,
+      "mask_pixels": 22454
+    },
+    {
+      "split": "val",
+      "file_name": "0000103_02964_d_0000030.jpg",
+      "expression": "The person standing next to a bicycle.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 2,
+      "top_score": 0.353,
+      "pred_box": [
+        592.1,
+        347.1,
+        895.9,
+        640.0
+      ],
+      "best_iou": 0.2175,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.0,
+      "sam_latency_ms": 104.7,
+      "mask_pixels": 18954
+    },
+    {
+      "split": "val",
+      "file_name": "0000342_00393_d_0000244.jpg",
+      "expression": "The black cars are scattered along the street.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 2,
+      "n_detections": 10,
+      "top_score": 0.5429,
+      "pred_box": [
+        868.4,
+        486.0,
+        963.6,
+        578.1
+      ],
+      "best_iou": 0.7397,
+      "hit_at_50": true,
+      "gd_latency_ms": 102.3,
+      "sam_latency_ms": 104.7,
+      "mask_pixels": 4585
+    },
+    {
+      "split": "val",
+      "file_name": "0000360_04705_d_0000737.jpg",
+      "expression": "The white car parks on the left side of the image.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 2,
+      "top_score": 0.6571,
+      "pred_box": [
+        1245.7,
+        270.0,
+        1357.3,
+        389.6
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.8,
+      "sam_latency_ms": 105.9,
+      "mask_pixels": 9370
+    },
+    {
+      "split": "test",
+      "file_name": "0000299_05500_d_0000108.jpg",
+      "expression": "The black vans and cars are distributed across the scene.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 26,
+      "n_detections": 25,
+      "top_score": 0.6084,
+      "pred_box": [
+        691.7,
+        503.0,
+        779.4,
+        624.3
+      ],
+      "best_iou": 0.7891,
+      "hit_at_50": true,
+      "gd_latency_ms": 103.2,
+      "sam_latency_ms": 105.7,
+      "mask_pixels": 6355
+    },
+    {
+      "split": "test",
+      "file_name": "9999952_00000_d_0000084.jpg",
+      "expression": "The yellow buses park in the well-lit parking lot.",
+      "resolution": [
+        1400,
+        788
+      ],
+      "n_gt_boxes": 11,
+      "n_detections": 5,
+      "top_score": 0.5211,
+      "pred_box": [
+        747.3,
+        419.5,
+        929.4,
+        501.4
+      ],
+      "best_iou": 0.8283,
+      "hit_at_50": true,
+      "gd_latency_ms": 102.9,
+      "sam_latency_ms": 105.4,
+      "mask_pixels": 11370
+    },
+    {
+      "split": "test",
+      "file_name": "9999952_00000_d_0000220.jpg",
+      "expression": "The bus near the bottom right corner of the image.",
+      "resolution": [
+        1400,
+        788
+      ],
+      "n_gt_boxes": 1,
+      "n_detections": 2,
+      "top_score": 0.4731,
+      "pred_box": [
+        379.8,
+        195.6,
+        505.1,
+        269.3
+      ],
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 104.8,
+      "sam_latency_ms": 109.2,
+      "mask_pixels": 4268
+    },
+    {
+      "split": "test",
+      "file_name": "0000120_02946_d_0000098.jpg",
+      "expression": "The pedestrians crossing the street.",
+      "resolution": [
+        1360,
+        765
+      ],
+      "n_gt_boxes": 3,
+      "n_detections": 5,
+      "top_score": 0.4138,
+      "pred_box": [
+        5.4,
+        4.3,
+        1354.2,
+        761.7
+      ],
+      "best_iou": 0.0037,
+      "hit_at_50": false,
+      "gd_latency_ms": 108.0,
+      "sam_latency_ms": 108.2,
+      "mask_pixels": 688598
+    },
+    {
+      "split": "test",
+      "file_name": "9999938_00000_d_0000206.jpg",
+      "expression": "The red cars on the road.",
+      "resolution": [
+        1400,
+        788
+      ],
+      "n_gt_boxes": 4,
+      "n_detections": 5,
+      "top_score": 0.4881,
+      "pred_box": [
+        164.3,
+        3.4,
+        665.9,
+        784.9
+      ],
+      "best_iou": 0.0034,
+      "hit_at_50": false,
+      "gd_latency_ms": 104.5,
+      "sam_latency_ms": 107.4,
+      "mask_pixels": 106063
+    },
+    {
+      "split": "test",
+      "file_name": "9999993_00000_d_0000015.jpg",
+      "expression": "The trucks park along the narrow street.",
+      "resolution": [
+        1400,
+        1050
+      ],
+      "n_gt_boxes": 12,
+      "n_detections": 7,
+      "top_score": 0.3899,
+      "pred_box": [
+        4.3,
+        7.4,
+        1394.5,
+        1045.7
+      ],
+      "best_iou": 0.0041,
+      "hit_at_50": false,
+      "gd_latency_ms": 90.6,
+      "sam_latency_ms": 108.3,
+      "mask_pixels": 738439
+    },
+    {
+      "split": "test",
+      "file_name": "9999952_00000_d_0000172.jpg",
+      "expression": "The cars moving along the highway.",
+      "resolution": [
+        1400,
+        788
+      ],
+      "n_gt_boxes": 7,
+      "n_detections": 6,
+      "top_score": 0.4641,
+      "pred_box": [
+        6.1,
+        3.9,
+        1393.4,
+        783.5
+      ],
+      "best_iou": 0.0107,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.6,
+      "sam_latency_ms": 105.0,
+      "mask_pixels": 298613
+    },
+    {
+      "split": "test",
+      "file_name": "0000207_00300_d_0000004.jpg",
+      "expression": "The red tricycles park on the left side of the street.",
+      "resolution": [
+        960,
+        540
+      ],
+      "n_gt_boxes": 5,
+      "n_detections": 3,
+      "top_score": 0.4077,
+      "pred_box": [
+        212.3,
+        137.3,
+        572.0,
+        538.0
+      ],
+      "best_iou": 0.0019,
+      "hit_at_50": false,
+      "gd_latency_ms": 102.7,
+      "sam_latency_ms": 103.6,
+      "mask_pixels": 61456
+    },
+    {
+      "split": "test",
+      "file_name": "9999963_00000_d_0000019.jpg",
+      "expression": "The motorbikes are located near each other on the left side of the image.",
+      "resolution": [
+        1400,
+        1050
+      ],
+      "n_gt_boxes": 2,
+      "n_detections": 0,
+      "top_score": null,
+      "pred_box": null,
+      "best_iou": 0.0,
+      "hit_at_50": false,
+      "gd_latency_ms": 100.2,
+      "sam_latency_ms": null,
+      "mask_pixels": null
+    },
+    {
+      "split": "test",
+      "file_name": "9999938_00000_d_0000260.jpg",
+      "expression": "The red cars in the image.",
+      "resolution": [
+        1400,
+        788
+      ],
+      "n_gt_boxes": 4,
+      "n_detections": 2,
+      "top_score": 0.4117,
+      "pred_box": [
+        879.9,
+        696.9,
+        921.2,
+        770.3
+      ],
+      "best_iou": 0.8049,
+      "hit_at_50": true,
+      "gd_latency_ms": 102.0,
+      "sam_latency_ms": 105.8,
+      "mask_pixels": 1509
+    }
+  ]
+}
