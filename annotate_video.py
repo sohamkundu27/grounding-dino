@@ -11,14 +11,36 @@ encoder. No Hugging Face Hub, torch.hub, REST or hosted-inference call is made a
 point -- HF_HUB_OFFLINE / TRANSFORMERS_OFFLINE / HF_DATASETS_OFFLINE are set before
 transformers is imported, and the BERT directory is validated up front.
 
+REFERENCE COMPATIBILITY
+-----------------------
+Behavioural reference: third_party/grounded_sam_2/
+grounded_sam2_tracking_demo_custom_video_input_gd1.0_local_model.py. Same effective
+hyperparameters (box_threshold 0.35, text_threshold 0.25, box prompts, annotation frame 0,
+mask logits thresholded at > 0.0, SAM 2.1 Hiera-Large, local Grounding DINO SwinT-OGC) and
+the same model calls, with the reference's weaknesses fixed: no global hardcoded paths, no
+globally-entered autocast, no CUDA property access on CPU, no assumption that a detection
+exists, no np.concatenate on empty masks, no whole-video mask retention, no persisted frame
+or JPEG directories, models loaded once, source FPS preserved, and success reported only
+after the MP4 is reopened and verified. The reference's "Grounding DINO 1.5 with Cloud API"
+comment is inaccurate -- it calls the LOCAL checkpoint, which is all this script does too.
+
+Reference checkpoint defaults (gdino_checkpoints/..., checkpoints/sam2.1_hiera_large.pt)
+are tried first but do not exist in this checkout -- those submodule directories hold only
+download_ckpts.sh, and downloading is forbidden -- so the defaults fall back to this
+repository's local checkpoints/ tree. See `_first_existing`.
+
 USAGE
 -----
-1. Minimal command (all model paths default to this repository's local assets):
+1. Minimal command (every path, prompt and video defaults to the reference demo):
+
+     python annotate_video.py
+
+   ...which is equivalent to:
 
      python annotate_video.py \
-         --input artifacts/demo_input.mp4 \
-         --output artifacts/demo_annotated.mp4 \
-         --text-prompt "car"
+         --input third_party/grounded_sam_2/assets/hippopotamus.mp4 \
+         --output artifacts/hippopotamus_tracking_demo.mp4 \
+         --text-prompt "hippopotamus."
 
 2. Complete command (every path explicit, as used for the recorded demo):
 
@@ -117,11 +139,36 @@ os.environ.setdefault("HF_DATASETS_OFFLINE", "1")
 REPO_ROOT = Path(__file__).resolve().parent
 GSAM2_ROOT = Path(os.environ.get("GROUNDED_SAM2_ROOT", REPO_ROOT / "third_party" / "grounded_sam_2"))
 
+
+def _first_existing(*candidates: Path) -> Path:
+    """First candidate that exists; otherwise the last (this repo's canonical location)."""
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[-1]
+
+
+# Defaults follow the reference demo (grounded_sam2_tracking_demo_custom_video_input_
+# gd1.0_local_model.py), whose paths are relative to the Grounded-SAM-2 root. Its weight
+# paths are tried FIRST, then this repository's actual layout: the submodule's
+# gdino_checkpoints/ and checkpoints/ contain only download_ckpts.sh here, and downloading
+# is not permitted, so the local checkpoints/ tree is what actually resolves.
 DEFAULT_GD_CONFIG = GSAM2_ROOT / "grounding_dino/groundingdino/config/GroundingDINO_SwinT_OGC.py"
-DEFAULT_GD_CHECKPOINT = REPO_ROOT / "checkpoints/grounding_dino/groundingdino_swint_ogc.pth"
-DEFAULT_SAM2_CONFIG = "configs/sam2.1/sam2.1_hiera_l.yaml"  # hydra name, relative to sam2 pkg
-DEFAULT_SAM2_CHECKPOINT = REPO_ROOT / "checkpoints/sam2/sam2.1_hiera_large.pt"
+DEFAULT_GD_CHECKPOINT = _first_existing(
+    GSAM2_ROOT / "gdino_checkpoints/groundingdino_swint_ogc.pth",          # reference default
+    REPO_ROOT / "checkpoints/grounding_dino/groundingdino_swint_ogc.pth",  # this repository
+)
+DEFAULT_SAM2_CONFIG = "configs/sam2.1/sam2.1_hiera_l.yaml"  # reference default (hydra name)
+DEFAULT_SAM2_CHECKPOINT = _first_existing(
+    GSAM2_ROOT / "checkpoints/sam2.1_hiera_large.pt",        # reference default
+    REPO_ROOT / "checkpoints/sam2/sam2.1_hiera_large.pt",    # this repository
+)
 DEFAULT_BERT_DIR = REPO_ROOT / "checkpoints/bert-base-uncased"
+
+# Reference demo values, exposed as CLI defaults (not hardcoded as the only input).
+DEFAULT_INPUT = GSAM2_ROOT / "assets/hippopotamus.mp4"
+DEFAULT_OUTPUT = REPO_ROOT / "artifacts/hippopotamus_tracking_demo.mp4"
+DEFAULT_TEXT_PROMPT = "hippopotamus."
 
 # Grounded-SAM-2's own modules import as `grounding_dino.*` / `sam2.*` and rely on the
 # repo root being importable (its demos are run from that directory).
@@ -204,13 +251,19 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             '  python annotate_video.py --input in.mp4 --output out.mp4 --text-prompt "car"'
         ),
     )
-    parser.add_argument("--input", type=Path, required=True, help="Input video file.")
-    parser.add_argument("--output", type=Path, required=True, help="Output MP4 path.")
     parser.add_argument(
-        "--text-prompt",
-        required=True,
-        help='Natural-language prompt, e.g. "person in a red shirt". Grounding DINO '
-        "lowercases it and appends '.' if missing; use '.' to separate several classes.",
+        "--input", type=Path, default=DEFAULT_INPUT,
+        help="Input video file (defaults to the reference demo clip).",
+    )
+    parser.add_argument(
+        "--output", type=Path, default=DEFAULT_OUTPUT,
+        help="Output MP4 path (defaults to the reference demo output).",
+    )
+    parser.add_argument(
+        "--text-prompt", default=DEFAULT_TEXT_PROMPT,
+        help='Natural-language prompt, e.g. "person in a red shirt". Normalised like the '
+        "repo's preprocess_caption (lowercased, '.'-terminated); use '.' to separate "
+        "several classes.",
     )
     parser.add_argument(
         "--grounding-dino-config", type=Path, default=DEFAULT_GD_CONFIG,
@@ -237,10 +290,21 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--box-threshold", type=float, default=0.35, help="Grounding DINO box threshold.")
     parser.add_argument("--text-threshold", type=float, default=0.25, help="Grounding DINO text threshold.")
     parser.add_argument(
-        "--device", default="cuda" if torch.cuda.is_available() else "cpu",
-        help="Torch device, e.g. cuda, cuda:0 or cpu.",
+        "--prompt-type", choices=["box", "point", "mask"], default="box",
+        help="How detections seed SAM 2 (reference default: box). 'point' samples 10 "
+        "positive points per object via utils.track_utils.sample_points_from_masks; "
+        "'mask' uses add_new_mask. Both first need frame-0 masks from SAM2ImagePredictor.",
+    )
+    parser.add_argument(
+        "--device", default="auto",
+        help="Torch device: 'auto' (cuda if available else cpu), or e.g. cuda, cuda:0, cpu.",
     )
     parser.add_argument("--codec", default="mp4v", help="FourCC code for the VideoWriter.")
+    parser.add_argument(
+        "--keep-frames-dir", type=Path, default=None, metavar="DIR",
+        help="Debug: extract the JPEG frames into DIR and keep them instead of using a "
+        "self-cleaning temporary directory.",
+    )
     parser.add_argument(
         "--redetect-interval", type=int, default=0, metavar="N",
         help="Re-run Grounding DINO every N frames to catch objects that appear later "
@@ -266,7 +330,22 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         parser.error("--jpeg-quality must be in [1, 100]")
     if args.redetect_interval < 0:
         parser.error("--redetect-interval must be >= 0")
+    if args.device == "auto":  # resolve now so everything downstream sees a real device
+        args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    args.text_prompt = normalize_caption(args.text_prompt)
     return args
+
+
+def normalize_caption(prompt: str) -> str:
+    """Normalise the prompt exactly as the repo's `preprocess_caption` does.
+
+    `predict` applies preprocess_caption internally, so this changes nothing about what
+    the model sees -- but a missing terminating period alters phrase splitting for
+    multi-class prompts, and doing it here means the caption we log is the caption
+    Grounding DINO actually receives, rather than a silently different string.
+    """
+    result = prompt.lower().strip()
+    return result if result.endswith(".") else result + "."
 
 
 def validate_bert_dir(bert_dir: Path) -> None:
@@ -433,6 +512,36 @@ def load_sam2_video_predictor(config_arg: str, checkpoint_path: Path, device: st
         return build_sam2_video_predictor(hydra_name, str(checkpoint_path), device=device)
 
 
+def load_sam2_image_predictor(config_arg: str, checkpoint_path: Path, device: str):
+    """Build SAM2ImagePredictor for frame-0 masks (only needed by --prompt-type point/mask).
+
+    Built from the same config/checkpoint as the video predictor, and only when the
+    chosen prompt type actually needs masks -- box prompting never loads it.
+    """
+    from sam2.build_sam import build_sam2
+    from sam2.sam2_image_predictor import SAM2ImagePredictor
+
+    hydra_name, extra_dir = resolve_sam2_config(config_arg)
+    print(f"[load] SAM 2 image     cfg={hydra_name}  ckpt={checkpoint_path.name} (for --prompt-type)")
+    with _hydra_search_dir(extra_dir):
+        model = build_sam2(hydra_name, str(checkpoint_path), device=device)
+    return SAM2ImagePredictor(model)
+
+
+def segment_first_frame(image_predictor, frame_path: Path, boxes_xyxy: np.ndarray) -> np.ndarray:
+    """Frame-0 masks from boxes, as the reference does. Returns bool masks (n, H, W)."""
+    from grounding_dino.groundingdino.util.inference import load_image
+
+    image_source, _ = load_image(str(frame_path))  # RGB, matching the reference
+    image_predictor.set_image(image_source)
+    masks, _scores, _logits = image_predictor.predict(
+        point_coords=None, point_labels=None, box=boxes_xyxy, multimask_output=False,
+    )
+    if masks.ndim == 4:  # (n, 1, H, W) -> (n, H, W)
+        masks = masks.squeeze(1)
+    return masks.astype(bool)
+
+
 def amp_context(device: str, enabled: bool):
     """CUDA autocast in bfloat16 (fp16 on pre-Ampere); a no-op elsewhere.
 
@@ -546,6 +655,71 @@ def extract_frames_to_dir(video_path: Path, frames_dir: Path, jpeg_quality: int)
     return count
 
 
+@contextmanager
+def frames_directory(keep_dir: Path | None) -> Iterator[Path]:
+    """Temp dir that self-cleans, unless --keep-frames-dir asks to preserve the frames."""
+    if keep_dir is None:
+        with tempfile.TemporaryDirectory(prefix="annotate_video_frames_") as tmp:
+            yield Path(tmp)
+        return
+
+    keep_dir.mkdir(parents=True, exist_ok=True)
+    existing = list(keep_dir.iterdir())
+    if existing:  # never clobber an unrelated directory silently
+        print(f"[warn] --keep-frames-dir {keep_dir} already contains {len(existing)} entry/ies; "
+              "extracted JPEGs will be added and same-named files overwritten.")
+    yield keep_dir
+    print(f"[debug] Extracted frames preserved in: {keep_dir.resolve()}")
+
+
+def validate_output_video(
+    output_path: Path, meta: VideoMeta, expected_frames: int,
+    frames_with_objects: int, objects_initialized: int,
+) -> None:
+    """Reopen the finished MP4 with OpenCV and prove it is what we claim.
+
+    Raises RuntimeError on any failure so the run cannot report success on a video that
+    does not open, lost frames, changed geometry, or contains no annotations at all.
+    """
+    if not output_path.is_file() or output_path.stat().st_size == 0:
+        raise RuntimeError(f"Output {output_path} is missing or empty.")
+
+    cap = cv2.VideoCapture(str(output_path))
+    try:
+        if not cap.isOpened():
+            raise RuntimeError(f"Output {output_path} could not be reopened with OpenCV.")
+        fps = float(cap.get(cv2.CAP_PROP_FPS))
+        decoded = 0
+        width = height = 0
+        while True:
+            ok, frame = cap.read()
+            if not ok or frame is None:
+                break
+            if decoded == 0:
+                height, width = frame.shape[:2]
+                if frame.dtype != np.uint8 or frame.ndim != 3:
+                    raise RuntimeError(f"Output frames are not uint8 BGR: {frame.dtype}, {frame.shape}")
+            decoded += 1
+    finally:
+        cap.release()
+
+    if decoded == 0:
+        raise RuntimeError(f"Output {output_path} contains no decodable frames.")
+    if decoded != expected_frames:
+        raise RuntimeError(f"Output has {decoded} frames, expected {expected_frames}.")
+    if (width, height) != (meta.width, meta.height):
+        raise RuntimeError(f"Output is {width}x{height}, expected {meta.width}x{meta.height}.")
+    if fps <= 0 or abs(fps - meta.fps) > 0.01:
+        raise RuntimeError(f"Output FPS {fps:.3f} does not match source {meta.fps:.3f}.")
+    if objects_initialized > 0 and frames_with_objects == 0:
+        raise RuntimeError(
+            f"{objects_initialized} object(s) were initialized but no frame contains a mask; "
+            "the output is unannotated."
+        )
+    print(f"[validate] reopened OK: {decoded} frames, {width}x{height} @ {fps:.3f} FPS, "
+          f"{frames_with_objects} frame(s) with >=1 tracked object")
+
+
 class SequentialFrameReader:
     """Pull original (non-recompressed) frames by index, seeking only when necessary."""
 
@@ -611,11 +785,14 @@ def detect_objects(
     if boxes.numel() == 0:
         return []
 
-    boxes_abs = boxes.float() * torch.tensor([width, height, width, height], dtype=torch.float32)
+    # predict() already returns CPU tensors, but never assume that before .numpy().
+    boxes = boxes.detach().cpu().float()
+    logits = logits.detach().cpu().float()
+    boxes_abs = boxes * torch.tensor([width, height, width, height], dtype=torch.float32)
     xyxy = box_convert(boxes_abs, in_fmt="cxcywh", out_fmt="xyxy").numpy()
     xyxy[:, 0::2] = xyxy[:, 0::2].clip(0, width - 1)  # clamp to the frame
     xyxy[:, 1::2] = xyxy[:, 1::2].clip(0, height - 1)
-    scores = logits.float().numpy().tolist()
+    scores = logits.numpy().tolist()
 
     detections = [
         Detection(box.astype(np.float32), float(score), (phrase or text_prompt).strip())
@@ -633,22 +810,56 @@ def detect_objects(
 # --------------------------------------------------------------------------------------
 
 
-def initialize_video_tracking(predictor, frames_dir: Path, detections: Sequence[Detection], seed_frame_idx: int = 0):
-    """Seed SAM 2 with one box per detection; returns (state, id->label, id->confidence).
+def initialize_video_tracking(
+    predictor,
+    frames_dir: Path,
+    detections: Sequence[Detection],
+    prompt_type: str = "box",
+    first_frame_masks: np.ndarray | None = None,
+    seed_frame_idx: int = 0,
+):
+    """Seed SAM 2 from the frame-0 detections; returns (state, id->label, id->confidence).
 
-    Track IDs are 1-based and assigned in detection order, matching the upstream demos.
+    Track IDs are 1-based, assigned in detection order, matching the upstream demos. The
+    numeric ID -- never the class label -- is the identity, so several objects sharing a
+    label stay distinct. Registration follows the reference for each prompt type:
+      box   -> add_new_points_or_box(box=...)            (reference default)
+      point -> sample_points_from_masks(masks, 10) -> add_new_points_or_box(points=...)
+      mask  -> add_new_mask(mask=...)
     """
     inference_state = predictor.init_state(video_path=str(frames_dir))
     id_to_label: dict[int, str] = {}
     id_to_conf: dict[int, float] = {}
 
+    points_per_object = None
+    if prompt_type == "point":
+        from utils.track_utils import sample_points_from_masks  # repo utility
+
+        if first_frame_masks is None:
+            raise RuntimeError("--prompt-type point requires frame-0 masks")
+        points_per_object = sample_points_from_masks(masks=first_frame_masks, num_points=10)
+
     for track_id, det in enumerate(detections, start=1):
-        predictor.add_new_points_or_box(
-            inference_state=inference_state,
-            frame_idx=seed_frame_idx,
-            obj_id=track_id,
-            box=det.box_xyxy,
-        )
+        if prompt_type == "box":
+            predictor.add_new_points_or_box(
+                inference_state=inference_state, frame_idx=seed_frame_idx,
+                obj_id=track_id, box=det.box_xyxy,
+            )
+        elif prompt_type == "point":
+            points = points_per_object[track_id - 1]
+            predictor.add_new_points_or_box(
+                inference_state=inference_state, frame_idx=seed_frame_idx, obj_id=track_id,
+                points=points, labels=np.ones(points.shape[0], dtype=np.int32),  # all positive
+            )
+        elif prompt_type == "mask":
+            if first_frame_masks is None:
+                raise RuntimeError("--prompt-type mask requires frame-0 masks")
+            predictor.add_new_mask(
+                inference_state=inference_state, frame_idx=seed_frame_idx,
+                obj_id=track_id, mask=first_frame_masks[track_id - 1],
+            )
+        else:  # unreachable: argparse constrains the choices
+            raise ValueError(f"Unsupported prompt type: {prompt_type!r}")
         id_to_label[track_id] = det.label
         id_to_conf[track_id] = det.confidence
     return inference_state, id_to_label, id_to_conf
@@ -708,7 +919,8 @@ def draw_annotations(frame: np.ndarray, tracks: Sequence[Track]) -> np.ndarray:
         x0, y0, x1, y1 = track.box_xyxy
         cv2.rectangle(annotated, (x0, y0), (x1, y1), color, thickness)
 
-        label = f"#{track.track_id} {track.label}"
+        # Reference-style label: "<id>: <phrase> <confidence>" (e.g. "1: hippopotamus 0.82").
+        label = f"{track.track_id}: {track.label}"
         if track.confidence is not None:
             label += f" {track.confidence:.2f}"
         (text_w, text_h), baseline = cv2.getTextSize(label, FONT, font_scale, thickness)
@@ -943,8 +1155,11 @@ def _run(args: argparse.Namespace) -> int:
     print(f"[video] {meta.path.name}: {meta}")
     enable_tf32_if_ampere(args.device)
     amp_enabled = not args.no_amp and args.device.startswith("cuda")
+    # Log the effective hyperparameters so the run log proves what was actually used.
     print(f"[setup] device={args.device}  amp={'on' if amp_enabled else 'off'}  codec={args.codec}  "
-          f"redetect_interval={args.redetect_interval}")
+          f"prompt_type={args.prompt_type}  redetect_interval={args.redetect_interval}")
+    print(f"[setup] box_threshold={args.box_threshold}  text_threshold={args.text_threshold}  "
+          f"caption={args.text_prompt!r}  ann_frame_idx=0  mask_logit_threshold=>0.0")
 
     reader: SequentialFrameReader | None = None
     writer: cv2.VideoWriter | None = None
@@ -952,11 +1167,18 @@ def _run(args: argparse.Namespace) -> int:
     objects_tracked = 0
     frames_with_objects = 0
 
-    # The temp dir, capture and writer are all released in the finally blocks below,
+    # The frames dir, capture and writer are all released in the finally blocks below,
     # including when inference raises.
-    with tempfile.TemporaryDirectory(prefix="annotate_video_frames_") as tmp:
-        frames_dir = Path(tmp)
+    with frames_directory(args.keep_frames_dir) as frames_dir:
         total_frames = extract_frames_to_dir(args.input, frames_dir, args.jpeg_quality)
+        # SAM 2 orders frames with int(os.path.splitext(name)[0]); confirm our zero-padded
+        # names sort numerically to 0..N-1 rather than trusting a lexicographic listing.
+        stems = sorted(int(p.stem) for p in frames_dir.glob("*.jpg"))
+        if stems != list(range(total_frames)):
+            raise RuntimeError(
+                f"Extracted frame indices are not a contiguous 0..{total_frames - 1} range; "
+                "SAM 2 would mis-order them."
+            )
         if meta.frame_count is None:
             print(f"[video] Frame count metadata was missing; decoded {total_frames} frames.")
         elif meta.frame_count != total_frames:
@@ -990,9 +1212,25 @@ def _run(args: argparse.Namespace) -> int:
                     objects_tracked = len(detections)
 
                     predictor = load_sam2_video_predictor(args.sam2_config, args.sam2_checkpoint, args.device)
+
+                    # Only point/mask prompting needs frame-0 masks, so the image
+                    # predictor is built only then (box mode never loads it).
+                    seed_masks = None
+                    if args.prompt_type in ("point", "mask"):
+                        image_predictor = load_sam2_image_predictor(
+                            args.sam2_config, args.sam2_checkpoint, args.device
+                        )
+                        boxes = np.stack([d.box_xyxy for d in detections])
+                        with amp_context(args.device, amp_enabled):
+                            seed_masks = segment_first_frame(image_predictor, frames_dir / "00000.jpg", boxes)
+
                     with amp_context(args.device, amp_enabled):
-                        state, id_to_label, id_to_conf = initialize_video_tracking(predictor, frames_dir, detections)
-                    print(f"[track] Propagating {len(detections)} object(s) across {total_frames} frames...")
+                        state, id_to_label, id_to_conf = initialize_video_tracking(
+                            predictor, frames_dir, detections,
+                            prompt_type=args.prompt_type, first_frame_masks=seed_masks,
+                        )
+                    print(f"[track] Propagating {len(detections)} object(s) across {total_frames} frames "
+                          f"({args.prompt_type} prompts)...")
                     written, frames_with_objects = write_annotated_video(
                         predictor, state, reader, writer, meta, total_frames,
                         id_to_label, id_to_conf, args, frames_dir, detections, grounding_model,
@@ -1006,6 +1244,11 @@ def _run(args: argparse.Namespace) -> int:
     elapsed = time.perf_counter() - started
     if written != total_frames:
         print(f"[warn] Wrote {written} of {total_frames} frames.")
+
+    # Reopen the finished file: success is only reported on a video that verifiably opens,
+    # kept every frame, kept the source geometry/FPS, and carries the annotations.
+    validate_output_video(args.output, meta, total_frames, frames_with_objects, objects_tracked)
+
     size_mb = args.output.stat().st_size / 1024**2 if args.output.exists() else 0.0
     print(f"[done] {written} frames @ {meta.fps:.3f} FPS ({meta.width}x{meta.height}, {size_mb:.1f} MB)")
     print(f"[done] objects_initialized={objects_tracked}  frames_with_objects={frames_with_objects}")

@@ -2,6 +2,10 @@
 annotate_video.py -- real-video integration run
 Offline open-vocabulary detection (Grounding DINO) + segmentation/tracking (SAM 2)
 ================================================================================
+Behavioural reference: third_party/grounded_sam_2/
+  grounded_sam2_tracking_demo_custom_video_input_gd1.0_local_model.py
+See "REFERENCE COMPARISON TEST" at the end of this file for the A/B result.
+
 Run date              : 2026-07-16
 Host GPU              : NVIDIA GeForce RTX 3080 (compute capability 8.6)
 Python / Torch        : 3.12.3 / 2.5.1+cu124 (venv: .venv-grounded-sam2)
@@ -177,4 +181,74 @@ LIMITATIONS OBSERVED IN THIS RUN
        now retired at the chunk boundary instead.
 * Identity: SAM 2 memory is cleared at every re-detection chunk boundary, so
   long-range identity is weaker with --redetect-interval > 0 than in a single pass.
+
+================================================================================
+REFERENCE COMPARISON TEST
+================================================================================
+Reference: third_party/grounded_sam_2/
+           grounded_sam2_tracking_demo_custom_video_input_gd1.0_local_model.py
+
+The reference script cannot be executed verbatim in this checkout: its hardcoded
+GROUNDING_DINO_CHECKPOINT ("gdino_checkpoints/groundingdino_swint_ogc.pth") and
+sam2_checkpoint ("./checkpoints/sam2.1_hiera_large.pt") do not exist here -- those
+submodule directories contain only download_ckpts.sh, and downloading is forbidden
+by the offline requirement. Its text encoder would also resolve "bert-base-uncased"
+through Hugging Face. So the comparison was done two ways instead.
+
+(A) SAME-INPUT RUN -- the reference's video, prompt and hyperparameters, via the
+    bare default command (all CLI defaults now match the reference):
+
+      python annotate_video.py
+      # == --input third_party/grounded_sam_2/assets/hippopotamus.mp4
+      #    --output artifacts/hippopotamus_tracking_demo.mp4
+      #    --text-prompt "hippopotamus."
+
+    Effective hyperparameters, quoted verbatim from that run's log (NOT asserted):
+      [setup] device=cuda  amp=on  codec=mp4v  prompt_type=box  redetect_interval=0
+      [setup] box_threshold=0.35  text_threshold=0.25  caption='hippopotamus.'
+              ann_frame_idx=0  mask_logit_threshold=>0.0
+      [load]  Grounding DINO cfg=GroundingDINO_SwinT_OGC.py
+              ckpt=groundingdino_swint_ogc.pth  bert=bert-base-uncased
+      [load]  SAM 2 video cfg=configs/sam2.1/sam2.1_hiera_l.yaml
+              ckpt=sam2.1_hiera_large.pt
+    Result:
+      2 objects detected on frame 0 (the same hippopotamus target as the reference):
+        #1 'hippopotamus' conf=0.778 box=(35, 299, 879, 569)
+        #2 'hippopotamus' conf=0.502 box=(878, 505, 1271, 556)
+      180/180 frames annotated, 1280x720 @ 30.000 FPS preserved, runtime 27.1 s,
+      6.64 FPS, in-script validation passed ([validate] reopened OK).
+      Output: artifacts/hippopotamus_tracking_demo.mp4 (21.4 MB -- NOT committed,
+      as it exceeds the 20 MB artifact budget; reproduce with the command above).
+      Both objects carry the label "hippopotamus" yet keep distinct numeric IDs and
+      distinct colours, i.e. a shared class label does not collapse the tracks.
+
+(B) NUMERIC A/B OF THE INFERENCE CORE -- the risk of the local-BERT override is that
+    it changes detections, so the reference's own core (stock load_model -> tokenizer
+    "bert-base-uncased" via the HF cache, load_image, predict, boxes*[w,h,w,h],
+    box_convert cxcywh->xyxy) was run against annotate_video.py's path
+    (load_grounding_dino with --bert-model-path checkpoints/bert-base-uncased,
+    detect_objects) on frame 0 of hippopotamus.mp4, same weights and thresholds:
+
+      same object count : True (2 vs 2)
+      same labels       : True
+      max |box| delta   : 0.000e+00 px
+      max |conf| delta  : 0.000e+00
+      VERDICT: IDENTICAL
+
+    The local BERT directory therefore reproduces the reference's detections exactly;
+    it removes the network dependency and changes nothing numerically.
+
+PROMPT MODES (--prompt-type; box is the reference default and the demo default)
+    box   : 4 objects, 79/79 frames annotated  [committed demo]
+    point : 4 objects, 79/79 frames annotated  (sample_points_from_masks, 10 pts/object)
+    mask  : 4 objects, 79/79 frames annotated  (add_new_mask)
+    point/mask additionally build SAM2ImagePredictor for frame-0 masks; box mode never
+    loads it. All three verified on artifacts/demo_input.mp4.
+
+CAPTION NORMALISATION
+    The prompt is normalised exactly as the repo's preprocess_caption does (lowercase,
+    '.'-terminated) before use, so "car" is logged and used as "car.". This is
+    behaviour-preserving: predict() applies preprocess_caption internally, and the
+    detections are byte-identical either way -- it only removes the chance that a
+    missing period silently changes phrase splitting for multi-class prompts.
 ================================================================================
