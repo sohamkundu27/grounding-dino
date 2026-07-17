@@ -434,11 +434,27 @@ def load_sam2_video_predictor(config_arg: str, checkpoint_path: Path, device: st
 
 
 def amp_context(device: str, enabled: bool):
-    """CUDA autocast in bfloat16 (fp16 on pre-Ampere); a no-op elsewhere."""
+    """CUDA autocast in bfloat16 (fp16 on pre-Ampere); a no-op elsewhere.
+
+    Applied to SAM 2 only -- see `without_amp` for why Grounding DINO is excluded.
+    """
     if not enabled or not device.startswith("cuda"):
         return nullcontext()
     dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
     return torch.autocast("cuda", dtype=dtype)
+
+
+def without_amp(device: str):
+    """Suspend autocast around Grounding DINO.
+
+    Its deformable-attention CUDA kernel is not implemented for BFloat16
+    ("ms_deform_attn_forward_cuda not implemented for 'BFloat16'"), so re-detection
+    inside SAM 2's autocast block would crash. The frame-0 detection already runs
+    outside AMP; this keeps the periodic re-detections consistent with it.
+    """
+    if not device.startswith("cuda"):
+        return nullcontext()
+    return torch.autocast("cuda", enabled=False)
 
 
 def enable_tf32_if_ampere(device: str) -> None:
@@ -810,16 +826,27 @@ def _propagate_with_redetection(
     next_id = 1
 
     for det in detections:  # seed from the frame-0 detections
-        live[next_id] = {"box": np.asarray(det.box_xyxy, dtype=np.float32), "label": det.label, "conf": det.confidence}
+        live[next_id] = {
+            "box": np.asarray(det.box_xyxy, dtype=np.float32),
+            "label": det.label, "conf": det.confidence, "last_seen": 0,
+        }
         next_id += 1
 
     chunk_start = 0
     while chunk_start < total_frames:
         if chunk_start > 0:  # re-detect and reconcile identities
-            fresh = detect_objects(
-                grounding_model, frames_dir / f"{chunk_start:05d}.jpg", args.text_prompt,
-                args.box_threshold, args.text_threshold, args.device, args.max_objects,
-            )
+            # Retire tracks whose mask was empty on the previous frame: the object has
+            # left or is fully occluded, and re-seeding SAM 2 from its stale box makes it
+            # latch onto whatever now occupies those pixels (e.g. road surface).
+            for tid in [t for t, st in live.items() if st["last_seen"] < chunk_start - 1]:
+                print(f"  [redetect@{chunk_start}] retiring lost track #{tid}")
+                del live[tid]
+
+            with without_amp(args.device):  # G-DINO's deform-attn kernel has no bf16 path
+                fresh = detect_objects(
+                    grounding_model, frames_dir / f"{chunk_start:05d}.jpg", args.text_prompt,
+                    args.box_threshold, args.text_threshold, args.device, args.max_objects,
+                )
             claimed: set[int] = set()
             for det in fresh:
                 best_id, best_iou = None, REDETECT_IOU_MATCH
@@ -834,7 +861,10 @@ def _propagate_with_redetection(
                     next_id += 1
                     live[best_id] = {"label": det.label, "conf": det.confidence, "box": None}
                     print(f"  [redetect@{chunk_start}] new object #{best_id} {det.label!r} conf={det.confidence:.2f}")
-                live[best_id].update(box=np.asarray(det.box_xyxy, dtype=np.float32), conf=det.confidence)
+                live[best_id].update(
+                    box=np.asarray(det.box_xyxy, dtype=np.float32),
+                    conf=det.confidence, last_seen=chunk_start,
+                )
                 claimed.add(best_id)
 
         live = {tid: st for tid, st in live.items() if st["box"] is not None}
@@ -860,6 +890,7 @@ def _propagate_with_redetection(
             tracks = _tracks_from_logits(obj_ids, mask_logits, id_to_label, id_to_conf, (meta.height, meta.width))
             for track in tracks:  # keep last known boxes fresh for the next IoU match
                 live[track.track_id]["box"] = np.asarray(track.box_xyxy, dtype=np.float32)
+                live[track.track_id]["last_seen"] = frame_idx
             if not emitter.emit(frame_idx, tracks):
                 return id_to_label, id_to_conf
         chunk_start += interval

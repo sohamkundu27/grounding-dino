@@ -1,0 +1,180 @@
+================================================================================
+annotate_video.py -- real-video integration run
+Offline open-vocabulary detection (Grounding DINO) + segmentation/tracking (SAM 2)
+================================================================================
+Run date              : 2026-07-16
+Host GPU              : NVIDIA GeForce RTX 3080 (compute capability 8.6)
+Python / Torch        : 3.12.3 / 2.5.1+cu124 (venv: .venv-grounded-sam2)
+OpenCV                : 5.0.0
+
+--------------------------------------------------------------------------------
+DATASET / SOURCE SEQUENCE
+--------------------------------------------------------------------------------
+Dataset               : KITTI Vision Benchmark Suite -- raw data ("City" category)
+Drive                 : 2011_10_03_drive_0027 (synced+rectified)
+Sensor                : image_02 (left rectified colour camera)
+Source sequence path  : <KITTI_RAW_ROOT>/2011_10_03/2011_10_03_drive_0027_sync/image_02/data/
+                        (on this machine <KITTI_RAW_ROOT> = the mounted kitti_raw dataset dir)
+Frames used           : 0000000505.png .. 0000000583.png (79 contiguous frames, order preserved)
+Native frame size     : 1241 x 376 PNG, ~10 Hz (KITTI nominal)
+
+Why this dataset: the mandatory test requires a REAL video sequence. The only
+aerial/drone data present locally is VisDrone2019-DET, which is still images with
+no temporal linkage (same disqualifying property as RefDrone), so it cannot serve
+as the video test. KITTI raw provides genuine sequential frames and is on the
+allowed list. No data was downloaded for this run.
+
+Why this segment: KITTI drive 0027 is ego-forward driving, so first-frame
+detections eventually leave the field of view. The 100-frame window with the
+LOWEST ego speed was selected objectively from the drive's own oxts telemetry
+(field 8 = forward velocity vf): window starting at frame 505, mean |vf| = 3.07 m/s
+(the drive never fully stops). Within that window the four frame-0 cars remain in
+view through frame 78 and the ego then turns a corner, so the clip is cut at 79
+frames. This is a property of detect-once tracking, not a rendering bug -- see
+LIMITATIONS below and --redetect-interval.
+
+Demo input encoding: the 79 PNGs were encoded to artifacts/demo_input.mp4 with
+OpenCV (mp4v, 10.0 FPS) in strict filename order. Width was cropped 1241 -> 1240
+explicitly because mp4v requires an even width; this is the ONLY geometric change
+and it is applied to the input clip, not by annotate_video.py (which never resizes).
+
+Licensing / retrieval: KITTI raw data is (c) 2011 Karlsruhe Institute of Technology
+and Toyota Technological Institute at Chicago, released under CC BY-NC-SA 3.0. The
+committed clips are a short non-commercial research excerpt with attribution.
+Retrieve the original with:
+  https://www.cvlibs.net/datasets/kitti/raw_data.php
+  -> category "City" -> 2011_10_03_drive_0027 -> "[synced+rectified data]"
+  Cite: A. Geiger, P. Lenz, C. Stiller, R. Urtasun, "Vision meets Robotics: The
+  KITTI Dataset", International Journal of Robotics Research (IJRR), 2013.
+
+--------------------------------------------------------------------------------
+MODELS (all local; no network access at any point)
+--------------------------------------------------------------------------------
+Grounding DINO config : third_party/grounded_sam_2/grounding_dino/groundingdino/config/GroundingDINO_SwinT_OGC.py
+Grounding DINO ckpt   : checkpoints/grounding_dino/groundingdino_swint_ogc.pth
+SAM 2 config          : configs/sam2.1/sam2.1_hiera_l.yaml   (hydra name, resolved against the sam2 package)
+SAM 2 checkpoint      : checkpoints/sam2/sam2.1_hiera_large.pt
+Local BERT directory  : checkpoints/bert-base-uncased
+                        (config.json, model.safetensors, tokenizer.json, tokenizer_config.json,
+                         vocab.txt; special_tokens_map.json absent and not required.
+                         NOT committed -- see .gitignore; regenerate per the command in
+                         annotate_video.py's validate_bert_dir error message.)
+
+Offline enforcement:
+  * HF_HUB_OFFLINE / TRANSFORMERS_OFFLINE / HF_DATASETS_OFFLINE are set via
+    os.environ.setdefault before transformers is imported.
+  * The SLConfig field text_encoder_type is overridden from the remote id
+    "bert-base-uncased" to the local directory. Run log confirms:
+        final text_encoder_type: checkpoints/bert-base-uncased
+  * validate_bert_dir() loads the tokenizer with local_files_only=True.
+  * Verified with: strace -f -e trace=connect  ->  0 external (AF_INET) connect()
+    calls during BERT + Grounding DINO model load.
+
+--------------------------------------------------------------------------------
+EXACT REPRODUCTION COMMAND
+--------------------------------------------------------------------------------
+# 1. Rebuild the demo clip from the KITTI raw frames (only needed if regenerating input):
+#    python - <<'PY'
+#    import cv2; from pathlib import Path
+#    SRC = Path("<KITTI_RAW_ROOT>/2011_10_03/2011_10_03_drive_0027_sync/image_02/data")
+#    frames = [SRC/f"{i:010d}.png" for i in range(505, 584)]
+#    h, w = cv2.imread(str(frames[0])).shape[:2]; we = w - (w % 2)
+#    vw = cv2.VideoWriter("artifacts/demo_input.mp4", cv2.VideoWriter.fourcc(*"mp4v"), 10.0, (we, h))
+#    [vw.write(cv2.imread(str(f))[:, :we]) for f in frames]; vw.release()
+#    PY
+
+# 2. Run the pipeline (this is the command that produced artifacts/demo_annotated.mp4):
+python annotate_video.py \
+    --input artifacts/demo_input.mp4 \
+    --output artifacts/demo_annotated.mp4 \
+    --text-prompt "car" \
+    --grounding-dino-config third_party/grounded_sam_2/grounding_dino/groundingdino/config/GroundingDINO_SwinT_OGC.py \
+    --grounding-dino-checkpoint checkpoints/grounding_dino/groundingdino_swint_ogc.pth \
+    --sam2-config configs/sam2.1/sam2.1_hiera_l.yaml \
+    --sam2-checkpoint checkpoints/sam2/sam2.1_hiera_large.pt \
+    --bert-model-path checkpoints/bert-base-uncased \
+    --box-threshold 0.35 \
+    --text-threshold 0.25 \
+    --device cuda \
+    --codec mp4v \
+    --redetect-interval 0
+
+--------------------------------------------------------------------------------
+RUN PARAMETERS AND RESULTS
+--------------------------------------------------------------------------------
+Text prompt           : "car"          (final; no threshold tuning was needed --
+                                        0.35/0.25 detected 4 cars on the first attempt)
+Box threshold         : 0.35
+Text threshold        : 0.25
+Device                : cuda
+Codec                 : mp4v
+Redetect interval     : 0 (detect once on frame 0)
+Frames processed      : 79
+Input resolution/FPS  : 1240 x 376 @ 10.000 FPS
+Objects initialized   : 4
+Frames with >=1 object: 79 / 79 (100%)
+Total runtime         : 14.9 s (end-to-end: frame extraction, both model loads,
+                                detection, propagation, rendering, MP4 writing)
+Avg processing FPS    : 5.29 frames/s
+Final output path     : artifacts/demo_annotated.mp4  (3.41 MB)
+
+First-frame detections (Grounding DINO, absolute XYXY after cxcywh->xyxy conversion):
+    #1 'car' conf=0.639 box=(737, 187, 932, 305)
+    #2 'car' conf=0.508 box=(441, 168, 472, 211)
+    #3 'car' conf=0.413 box=(568, 171, 611, 206)
+    #4 'car' conf=0.384 box=(654, 178, 683, 201)
+
+--------------------------------------------------------------------------------
+OUTPUT VALIDATION (programmatic, on artifacts/demo_annotated.mp4)
+--------------------------------------------------------------------------------
+  [PASS] output file exists: artifacts/demo_annotated.mp4
+  [PASS] output size > 0: 3.41 MB
+  [PASS] output opens with cv2.VideoCapture
+  [PASS] output frame count > 0: 79 frames
+  [PASS] frame count matches input: in=79 out=79
+  [PASS] width/height match input: in=1240x376 out=1240x376
+  [PASS] FPS valid and matches input: in=10.000 out=10.000
+  [PASS] all frames uint8 BGR 3-channel
+  [PASS] frames differ due to rendered annotations: 79/79 frames annotated
+  [PASS] tracked object present in >=1 frame: first=0 last=78
+  [PASS] output is NOT just unmodified frames: 100% of frames annotated
+
+  RESULT: ALL CHECKS PASSED
+
+Annotation presence was measured independently of the pipeline: an output frame
+counts as annotated only if >0.1% of its pixels differ from the corresponding
+input frame by >40 levels on some channel (a threshold chosen to ignore mp4v
+recompression noise, which perturbs every frame slightly). That independent count
+(79) matches the pipeline's own mask-derived frames_with_objects (79).
+
+Visual inspection (beginning / middle / end of artifacts/demo_annotated.mp4):
+  frame 0  : 4 cars masked, boxed and labelled (#1..#4), distinct colours.
+  frame 40 : #2/#3/#4 still tracked with their original IDs and colours. #2 has
+             grown from a distant ~31x43 px car to a large near-field object as the
+             ego approaches -- identity and colour hold across that scale change.
+  frame 78 : still tracked/labelled (last annotated frame).
+
+--------------------------------------------------------------------------------
+LIMITATIONS OBSERVED IN THIS RUN
+--------------------------------------------------------------------------------
+* Object exit (expected, detect-once): the ego vehicle drives forward, so frame-0
+  cars leave the field of view. Extending this same window to 100 frames yields
+  only 79/100 annotated frames -- all four cars have exited by frame 79 and the
+  cars visible afterwards were never detected, because Grounding DINO ran only on
+  frame 0. The demo clip is 79 frames for that reason.
+* --redetect-interval 25 on the 100-frame window recovers this: 100/100 frames
+  annotated, with new objects (#5..#15) picked up at frames 25 and 75 and existing
+  IDs preserved by box IoU (the re-detection at frame 50 added nothing, i.e. every
+  fresh detection matched a live track). Re-detection is OFF by default and was NOT
+  used for the committed demo.
+* Two real bugs were found and fixed by exercising --redetect-interval, and both
+  are covered by comments in annotate_video.py:
+    1. Grounding DINO's ms_deform_attn CUDA kernel has no BFloat16 implementation,
+       so re-detecting inside SAM 2's autocast block crashed. G-DINO now always runs
+       outside AMP (see without_amp()).
+    2. Tracks whose mask had gone empty were re-registered from a stale box after
+       reset_state, causing SAM 2 to latch onto the road surface. Lost tracks are
+       now retired at the chunk boundary instead.
+* Identity: SAM 2 memory is cleared at every re-detection chunk boundary, so
+  long-range identity is weaker with --redetect-interval > 0 than in a single pass.
+================================================================================

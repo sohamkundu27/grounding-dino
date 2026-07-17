@@ -99,3 +99,21 @@ experiments/**/inputs/**
 build/
 *.so
 .venv-gsam2-cuda/
+
+# --- Offline Grounding DINO + SAM 2 video annotation (annotate_video.py) ------
+# The short KITTI demo clip and its annotated result ARE committed (~3.5 MB each)
+# as the deliverable of the offline pipeline; the blanket *.mp4 rule above would
+# otherwise drop them. Everything else the pipeline generates stays untracked.
+!artifacts/demo_input.mp4
+!artifacts/demo_annotated.mp4
+
+# Local bert-base-uncased for Grounding DINO's text encoder: weights are large and
+# redistributable from HF, so the directory is never committed (checkpoints/** and
+# *.safetensors already cover it; named here so the intent is explicit).
+checkpoints/bert-base-uncased/
+
+# Temporary extracted-frame directories. annotate_video.py uses tempfile.
+# TemporaryDirectory, but the upstream demos write these into the working dir.
+custom_video_frames/
+tracking_results/
+*_frames/
