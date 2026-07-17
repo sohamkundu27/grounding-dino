@@ -1,0 +1,82 @@
+sam2_dense_annotate_video.py — dense class-agnostic annotation run report
+=========================================================================
+Date            : 2026-07-16
+Host GPU        : NVIDIA GeForce RTX 3080
+Python env      : .venv-grounded-sam2 (torch 2.5.1+cu124)
+
+
+WHAT THIS IS
+------------
+The no-download companion to panoptic_annotate_video.py. It runs SAM 2's automatic mask
+generator over a grid of point prompts, so it needs no text prompt and no new weights —
+only the sam2.1_hiera_large.pt checkpoint already in checkpoints/sam2/.
+
+WHAT THIS IS NOT
+----------------
+SAM 2 is a segmentation model, not a panoptic one. It finds object boundaries but has no
+class vocabulary, so regions are labelled "region #N" — never "road" or "car #3" — and
+there is no thing/stuff split. For real semantic labels use panoptic_annotate_video.py.
+
+  Model      : SAM 2 automatic mask generator (SAM2AutomaticMaskGenerator)
+  Checkpoint : checkpoints/sam2/sam2.1_hiera_large.pt  (local, pre-existing)
+  Config     : configs/sam2.1/sam2.1_hiera_l.yaml      (hydra name, resolved via sam2 pkg)
+
+
+COMMAND
+-------
+python sam2_dense_annotate_video.py \
+    --input artifacts/demo_input.mp4 \
+    --output artifacts/sam2_dense_demo_annotated.mp4 \
+    --config configs/sam2.1/sam2.1_hiera_l.yaml \
+    --checkpoint checkpoints/sam2/sam2.1_hiera_large.pt \
+    --device cuda
+
+
+RUN OUTPUT
+----------
+[load] SAM 2  config=configs/sam2.1/sam2.1_hiera_l.yaml  ckpt=sam2.1_hiera_large.pt  device=cuda
+[video] artifacts/demo_input.mp4  1240x376  10.00 fps  ~79 frames
+[run] frame 20  regions=29
+[run] frame 40  regions=28
+[run] frame 60  regions=27
+
+=== sam2_dense_annotate_video summary ===
+model         : SAM 2 automatic mask generator (class-agnostic, no semantics)
+checkpoint    : checkpoints/sam2/sam2.1_hiera_large.pt
+device        : cuda  (autocast=on)
+frames        : 79 in, 79 out
+resolution    : 1240x376 (input 1240x376)
+fps           : 10.00 (input 10.00)
+runtime       : 64.9 s
+avg fps       : 1.22
+mean regions  : 27.0 per frame
+mean coverage : 79.7% of pixels claimed by SAM 2 (rest filled as background)
+output        : /home/soham/grounding-dino/artifacts/sam2_dense_demo_annotated.mp4
+
+
+VALIDATION
+----------
+Output reopened with OpenCV after writing:
+
+  width x height : 1240x376  == input 1240x376   PASS
+  fps            : 10.00     == input 10.00      PASS
+  frame count    : 79 out    == 79 written       PASS
+  mean coverage  : 79.7% claimed directly by SAM 2; the remainder is painted as a single
+                   neutral background region (--fill-background, on by default) so the
+                   frame still reads as fully covered.
+
+Frames inspected at frame 1 and frame 39: ~27 distinctly coloured regions per frame
+covering cars, buildings, road, vegetation and sky — dense, but unnamed.
+
+Temporal colour consistency: regions are matched frame-to-frame by mask IoU
+(--iou-match-threshold, default 0.3). Because regions are class-agnostic there is no
+same-class constraint on matching. Evidence: "region #1" (the road surface) holds the same
+id and colour from frame 1 through frame 39.
+
+
+WHY BOTH SCRIPTS EXIST
+----------------------
+SAM 2 covers ~80% of pixels with no semantics at 1.22 fps; Mask2Former covers 100% with
+full Cityscapes labels at 11.15 fps — roughly 9x faster and strictly more informative.
+panoptic_annotate_video.py is the right tool for dense annotation; this script is the
+fallback for environments where downloading panoptic weights is not permitted.

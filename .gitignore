@@ -107,6 +107,13 @@ build/
 !artifacts/demo_input.mp4
 !artifacts/demo_annotated.mp4
 
+# --- Dense prompt-free annotation (panoptic_annotate_video.py, ----------------
+#     sam2_dense_annotate_video.py)
+# Same rationale: these annotated demo results are the deliverable of the dense
+# pipelines and are small enough to commit, so they opt out of the *.mp4 rule.
+!artifacts/panoptic_demo_annotated.mp4
+!artifacts/sam2_dense_demo_annotated.mp4
+
 # Local bert-base-uncased for Grounding DINO's text encoder: weights are large and
 # redistributable from HF, so the directory is never committed (checkpoints/** and
 # *.safetensors already cover it; named here so the intent is explicit).

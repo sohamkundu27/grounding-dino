@@ -1,0 +1,116 @@
+panoptic_annotate_video.py — dense panoptic annotation run report
+=================================================================
+Date            : 2026-07-16
+Host GPU        : NVIDIA GeForce RTX 3080
+Python env      : .venv-grounded-sam2 (torch 2.5.1+cu124, transformers 4.44.2)
+
+
+MODEL SELECTION
+---------------
+Requested priority order was: 1) Mask2Former  2) OneFormer  3) Detectron2 Panoptic FPN
+4) any other local panoptic model. A survey of the machine found NO panoptic checkpoint
+present:
+
+  * transformers 4.44.2 ships the Mask2Former/OneFormer *classes*, but the HF cache held
+    only bert-base-uncased — no panoptic weights.
+  * detectron2 / mmdet / mmcv / mmengine are all absent (ModuleNotFoundError).
+  * third_party/{mm_grounding_dino,pet_dino,refdrone} vendor mmdet *source* including
+    configs/panoptic_fpn and configs/mask2former, but mmdet is not installed and no
+    matching checkpoints exist.
+  * checkpoints/ held only Grounding DINO, SAM, SAM 2, PET-DINO, NGDINO and BERT — all
+    prompted-detection or class-agnostic models, none panoptic.
+
+The blocker was raised rather than worked around, and the download of choice #1 was then
+explicitly authorised.
+
+  Model      : Mask2Former (Mask2FormerForUniversalSegmentation, transformers 4.44.2)
+  Checkpoint : facebook/mask2former-swin-large-cityscapes-panoptic
+  Local path : checkpoints/mask2former/mask2former-swin-large-cityscapes-panoptic
+               (config.json + preprocessor_config.json + model.safetensors, 827 MB)
+  Label space: 19 Cityscapes classes — 8 thing / 11 stuff
+
+Cityscapes (not COCO) was chosen because its vocabulary matches street scenes exactly:
+road, sidewalk, building, wall, fence, pole, traffic light, traffic sign, vegetation,
+terrain, sky, person, rider, car, truck, bus, train, motorcycle, bicycle.
+
+The checkpoint directory is covered by the existing checkpoints/** and *.safetensors
+ignore rules, so the weights are NOT committed.
+
+
+COMMAND
+-------
+python panoptic_annotate_video.py \
+    --input artifacts/demo_input.mp4 \
+    --output artifacts/panoptic_demo_annotated.mp4 \
+    --config checkpoints/mask2former/mask2former-swin-large-cityscapes-panoptic \
+    --checkpoint checkpoints/mask2former/mask2former-swin-large-cityscapes-panoptic \
+    --device cuda
+
+
+RUN OUTPUT
+----------
+[load] Mask2Former  config=mask2former-swin-large-cityscapes-panoptic  weights=mask2former-swin-large-cityscapes-panoptic  device=cuda
+[load] label space: 19 classes (cityscapes), 8 thing / 11 stuff
+[video] artifacts/demo_input.mp4  1240x376  10.00 fps  ~79 frames
+[run] frame 20  segments=19
+[run] frame 40  segments=16
+[run] frame 60  segments=17
+
+=== panoptic_annotate_video summary ===
+model         : Mask2Former (mask2former-swin-large-cityscapes-panoptic)
+checkpoint    : checkpoints/mask2former/mask2former-swin-large-cityscapes-panoptic
+device        : cuda  (autocast=on)
+frames        : 79 in, 79 out
+resolution    : 1240x376 (input 1240x376)
+fps           : 10.00 (input 10.00)
+runtime       : 7.1 s
+avg fps       : 11.15
+mean coverage : 100.0% of pixels segmented
+output        : /home/soham/grounding-dino/artifacts/panoptic_demo_annotated.mp4
+
+
+VALIDATION
+----------
+Output reopened with OpenCV after writing:
+
+  width x height : 1240x376  == input 1240x376   PASS
+  fps            : 10.00     == input 10.00      PASS
+  frame count    : 79 out    == 79 written       PASS
+  frame order    : preserved (sequential read/write, no reordering)
+  mean coverage  : 100.0% of pixels assigned to a panoptic segment
+
+Frames inspected at beginning (0), middle (39) and end (78).
+
+  frame 0   road, sidewalk, building, wall, vegetation, sky, traffic sign, car #1
+  frame 39  road, sidewalk, building, vegetation, sky, pole, traffic sign,
+            car #6, car #16, car #17, car #21, car #49, bicycle #2
+  frame 78  road, building, wall, vegetation, sky, pole, traffic sign,
+            car #6, car #16, car #119, car #123, car #124, car #125, car #126,
+            motorcycle #14
+
+Confirmed: road, buildings, vegetation, cars and sky are all coloured where recognised;
+the result is dense full-scene annotation (100% of pixels), not a handful of prompted
+detections. There is no text prompt anywhere in this pipeline.
+
+
+TEMPORAL COLOUR CONSISTENCY
+---------------------------
+Thing instances are matched frame-to-frame by mask IoU within the same semantic class
+(--iou-match-threshold, default 0.3); a match reuses the previous stable track id and
+therefore the previous colour, otherwise a new id is minted. Stuff classes (road, sky,
+vegetation, ...) skip matching entirely — their colour is a pure function of the class id,
+so it is identical in every frame and across runs.
+
+Evidence: "car #16" (dark red) and "car #6" (purple) hold the same ids and the same
+colours from frame 39 through frame 78 — 39 frames apart.
+
+
+NOTES / LIMITATIONS
+-------------------
+  * Instance numbers climb over the clip (car #125 by the end) because distant cars enter
+    and leave frame, and a track lost for even one frame is re-minted. Colour stability
+    between *adjacent* frames — what the overlay actually needs — is unaffected.
+  * Labels are suppressed for segments below --min-area (default 1500 px) so tiny specks
+    do not clutter the frame; those regions are still coloured.
+  * Confidence is not drawn: Mask2Former's per-segment score is not meaningful enough to
+    display alongside a class name.
