@@ -22,6 +22,38 @@ there is no thing/stuff split. For real semantic labels use panoptic_annotate_vi
   Config     : configs/sam2.1/sam2.1_hiera_l.yaml      (hydra name, resolved via sam2 pkg)
 
 
+HYPERPARAMS — ALIGNMENT WITH THE GROUNDED-SAM-2 REFERENCE DEMO
+--------------------------------------------------------------
+Aligned with third_party/grounded_sam_2/
+grounded_sam2_tracking_demo_custom_video_input_gd1.0_local_model.py:
+
+  checkpoint          sam2.1_hiera_large.pt              (already matched)
+  config              configs/sam2.1/sam2.1_hiera_l.yaml (already matched)
+  device              cuda if available else cpu         (already matched)
+  autocast dtype      torch.bfloat16                     (already matched)
+  TF32 on Ampere      matmul.allow_tf32 = cudnn.allow_tf32 = True, behind the same
+                      get_device_properties(0).major >= 8 guard   (ADDED)
+
+Deliberately not carried over, with reasons:
+
+  BOX_THRESHOLD=0.35      Grounding DINO knobs. This script has no text prompt and no box
+  TEXT_THRESHOLD=0.25     detector, so they have no target here. --score-threshold is SAM
+                          2's pred_iou_thresh (mask quality) — a different quantity, not a
+                          rename of BOX_THRESHOLD.
+  PROMPT_TYPE_FOR_VIDEO   No prompts exist; regions come from a 24x24 point grid.
+  multimask_output=False  Correct for the reference (one mask per box prompt), harmful
+                          here. Measured on frame 0 of the KITTI clip:
+                              multimask_output=True   21 regions, 84.3% coverage
+                              multimask_output=False  15 regions, 62.1% coverage
+                          A 22-point coverage loss defeats the point of a dense script, so
+                          the default stays True. Pass --no-multimask-output to match the
+                          reference exactly.
+
+Also not copied: the reference's global torch.autocast(...).__enter__(), which stays
+entered for the life of the process. This script scopes autocast to the inference call —
+same dtype, no leak.
+
+
 COMMAND
 -------
 python sam2_dense_annotate_video.py \
@@ -47,11 +79,16 @@ device        : cuda  (autocast=on)
 frames        : 79 in, 79 out
 resolution    : 1240x376 (input 1240x376)
 fps           : 10.00 (input 10.00)
-runtime       : 64.9 s
-avg fps       : 1.22
+runtime       : 65.1 s
+avg fps       : 1.21
 mean regions  : 27.0 per frame
 mean coverage : 79.7% of pixels claimed by SAM 2 (rest filled as background)
 output        : /home/soham/grounding-dino/artifacts/sam2_dense_demo_annotated.mp4
+
+Re-run after aligning hyperparams with the reference demo: 1.22 -> 1.21 fps, coverage and
+region count unchanged. Enabling TF32 made no measurable difference on this clip — bf16
+autocast already covers the matmul-heavy path, so TF32 has little left to accelerate. It
+is kept for parity with the reference and because it can matter on fp32 paths.
 
 
 VALIDATION

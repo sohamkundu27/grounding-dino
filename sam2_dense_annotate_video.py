@@ -43,8 +43,39 @@ import torch
 
 REPO_ROOT = Path(__file__).resolve().parent
 
+# --- Hyperparams for SAM 2 ----------------------------------------------------
+# Aligned with the Grounded-SAM-2 reference demo
+# (third_party/grounded_sam_2/grounded_sam2_tracking_demo_custom_video_input_gd1.0_local_model.py),
+# so both pipelines run the same weights, config, device and precision.
+#
+# The reference's remaining hyperparams have no counterpart here and are deliberately
+# NOT carried over:
+#   BOX_THRESHOLD / TEXT_THRESHOLD  Grounding DINO knobs; this script has no text prompt
+#                                   and no box detector. --score-threshold is SAM 2's
+#                                   pred_iou_thresh (mask quality), a different quantity,
+#                                   so copying 0.35 onto it would be meaningless.
+#   PROMPT_TYPE_FOR_VIDEO           there are no prompts; regions come from a point grid.
+#   multimask_output=False          the reference wants exactly one mask per box prompt.
+#                                   For grid-based generation it costs coverage — measured
+#                                   on frame 0: 84.3% -> 62.1%, 21 -> 15 regions. Default
+#                                   stays True; --no-multimask-output matches the
+#                                   reference exactly if you want it.
 DEFAULT_SAM2_CONFIG = "configs/sam2.1/sam2.1_hiera_l.yaml"  # hydra name, see resolve_sam2_config
 DEFAULT_SAM2_CHECKPOINT = REPO_ROOT / "checkpoints/sam2/sam2.1_hiera_large.pt"
+AUTOCAST_DTYPE = torch.bfloat16  # reference uses bfloat16
+
+
+def enable_ampere_tf32() -> None:
+    """Turn on TF32 on Ampere+ GPUs, as the reference demo does.
+
+    Guarded by the same compute-capability check, so this is a no-op on older cards and
+    never touches CUDA state on a CPU-only run.
+    """
+    if not torch.cuda.is_available():
+        return
+    if torch.cuda.get_device_properties(0).major >= 8:
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -78,6 +109,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--points-per-side", type=int, default=24,
         help="Grid density of point prompts. Higher = more regions, slower.",
+    )
+    parser.add_argument(
+        "--multimask-output", action="store_true", default=True,
+        help="Let SAM 2 propose several masks per point and keep the best. Needed for "
+        "dense coverage.",
+    )
+    parser.add_argument(
+        "--no-multimask-output", dest="multimask_output", action="store_false",
+        help="One mask per point, matching the reference demo's multimask_output=False. "
+        "Measured cost on frame 0: coverage 84.3%% -> 62.1%%, regions 21 -> 15.",
     )
     parser.add_argument(
         "--min-area", type=int, default=1500,
@@ -173,6 +214,7 @@ def build_generator(args: argparse.Namespace):
     from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
     from sam2.build_sam import build_sam2
 
+    enable_ampere_tf32()
     hydra_name, search_dir = resolve_sam2_config(args.config)
     if search_dir is not None:
         # A config outside the sam2 package needs its directory on hydra's search path.
@@ -187,6 +229,7 @@ def build_generator(args: argparse.Namespace):
         pred_iou_thresh=args.score_threshold,
         stability_score_thresh=args.stability_score_threshold,
         min_mask_region_area=args.min_region_area,
+        multimask_output=args.multimask_output,
         output_mode="binary_mask",
     )
     print(f"[load] SAM 2  config={hydra_name}  ckpt={args.checkpoint.name}  device={args.device}")
@@ -342,7 +385,9 @@ def main(argv: list[str] | None = None) -> int:
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             with torch.inference_mode():
                 if use_amp:
-                    with torch.autocast("cuda", dtype=torch.bfloat16):
+                    # Scoped, unlike the reference's global autocast(...).__enter__(),
+                    # which leaks for the life of the process. Same dtype either way.
+                    with torch.autocast("cuda", dtype=AUTOCAST_DTYPE):
                         raw = generator.generate(rgb)
                 else:
                     raw = generator.generate(rgb)
