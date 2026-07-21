@@ -20,14 +20,14 @@ Everything is read from local disk. Nothing is fetched at run time.
 Usage
 -----
     python panoptic_annotate_video.py \
-        --input artifacts/demo_input.mp4 \
-        --output artifacts/panoptic_demo_annotated.mp4 \
         --config checkpoints/mask2former/mask2former-swin-large-cityscapes-panoptic \
         --checkpoint checkpoints/mask2former/mask2former-swin-large-cityscapes-panoptic \
         --device cuda
 
 Notes
 -----
+  * The input and output videos are not flags: they are the INPUT_VIDEO / OUTPUT_VIDEO
+    globals near the top of this file. Edit them to run on a different clip.
   * --config and --checkpoint are separate flags per the CLI contract, but a HuggingFace
     Mask2Former keeps config.json, preprocessor_config.json and the weights in one
     directory, so both normally point at the same place. A file path (config.json /
@@ -54,6 +54,11 @@ REPO_ROOT = Path(__file__).resolve().parent
 
 DEFAULT_MODEL_DIR = REPO_ROOT / "checkpoints/mask2former/mask2former-swin-large-cityscapes-panoptic"
 
+# Input/output video paths are fixed here rather than passed on the command line.
+# Edit these two to point the run at a different clip.
+INPUT_VIDEO = REPO_ROOT / "artifacts/demo_input.mp4"
+OUTPUT_VIDEO = REPO_ROOT / "artifacts/panoptic_demo_annotated.mp4"
+
 # Cityscapes "thing" classes: countable objects that get per-instance ids and IoU tracking.
 # Every other class is "stuff" (road, sky, building, ...) and is colored purely by class.
 CITYSCAPES_THING_NAMES = frozenset(
@@ -70,8 +75,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         description="Dense panoptic video annotation using a local Mask2Former checkpoint.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--input", type=Path, required=True, help="Input video file.")
-    parser.add_argument("--output", type=Path, required=True, help="Output annotated video file.")
     parser.add_argument(
         "--config", type=Path, default=DEFAULT_MODEL_DIR,
         help="Local model config: a directory holding config.json, or the config.json itself.",
@@ -152,11 +155,11 @@ def resolve_model_dir(path: Path, what: str) -> Path:
 
 def validate_args(args: argparse.Namespace) -> None:
     """Fail early, with actionable messages, on any bad path or device."""
-    if not args.input.is_file():
-        raise FileNotFoundError(f"Input video not found: {args.input}")
+    if not INPUT_VIDEO.is_file():
+        raise FileNotFoundError(f"Input video not found: {INPUT_VIDEO}")
     if args.device.startswith("cuda") and not torch.cuda.is_available():
         raise RuntimeError("--device requests CUDA but torch.cuda.is_available() is False.")
-    args.output.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT_VIDEO.parent.mkdir(parents=True, exist_ok=True)
 
 
 def load_model(config_dir: Path, checkpoint_dir: Path, device: str):
@@ -340,22 +343,22 @@ def main(argv: list[str] | None = None) -> int:
     model, processor, config = load_model(config_dir, checkpoint_dir, args.device)
     id2label, thing_ids = build_label_tables(config)
 
-    cap = cv2.VideoCapture(str(args.input))
+    cap = cv2.VideoCapture(str(INPUT_VIDEO))
     if not cap.isOpened():
-        raise RuntimeError(f"Could not open input video: {args.input}")
+        raise RuntimeError(f"Could not open input video: {INPUT_VIDEO}")
 
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    print(f"[video] {args.input}  {width}x{height}  {fps:.2f} fps  ~{total} frames")
+    print(f"[video] {INPUT_VIDEO}  {width}x{height}  {fps:.2f} fps  ~{total} frames")
 
     writer = cv2.VideoWriter(
-        str(args.output), cv2.VideoWriter_fourcc(*args.codec), fps, (width, height),
+        str(OUTPUT_VIDEO), cv2.VideoWriter_fourcc(*args.codec), fps, (width, height),
     )
     if not writer.isOpened():
         cap.release()
-        raise RuntimeError(f"Could not open VideoWriter for: {args.output} (codec {args.codec})")
+        raise RuntimeError(f"Could not open VideoWriter for: {OUTPUT_VIDEO} (codec {args.codec})")
 
     tracker = InstanceTracker(args.iou_match_threshold)
     use_amp = args.device.startswith("cuda") and not args.no_amp
@@ -435,9 +438,9 @@ def main(argv: list[str] | None = None) -> int:
         raise RuntimeError("No frames were read from the input video.")
 
     # Validate by reopening the file we just wrote.
-    check = cv2.VideoCapture(str(args.output))
+    check = cv2.VideoCapture(str(OUTPUT_VIDEO))
     if not check.isOpened():
-        raise RuntimeError(f"Output written but could not be reopened: {args.output}")
+        raise RuntimeError(f"Output written but could not be reopened: {OUTPUT_VIDEO}")
     out_w = int(check.get(cv2.CAP_PROP_FRAME_WIDTH))
     out_h = int(check.get(cv2.CAP_PROP_FRAME_HEIGHT))
     out_fps = check.get(cv2.CAP_PROP_FPS)
@@ -454,7 +457,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"runtime       : {runtime:.1f} s")
     print(f"avg fps       : {frames / runtime:.2f}")
     print(f"mean coverage : {100.0 * coverage_sum / frames:.1f}% of pixels segmented")
-    print(f"output        : {args.output.resolve()}")
+    print(f"output        : {OUTPUT_VIDEO.resolve()}")
 
     if (out_w, out_h) != (width, height):
         raise RuntimeError(f"Output resolution {out_w}x{out_h} != input {width}x{height}")
