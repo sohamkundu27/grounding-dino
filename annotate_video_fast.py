@@ -44,18 +44,19 @@ What this buys, and what it costs:
 
 USAGE
 -----
-1. Minimal command (defaults to the reference demo clip, downsampled):
+1. Minimal command (annotates INPUT_VIDEO, downsampled):
 
      python annotate_video_fast.py
 
 2. Explicit downsampling:
 
      python annotate_video_fast.py \
-         --input artifacts/demo_input.mp4 \
-         --output artifacts/demo_annotated.mp4 \
          --text-prompt "car" \
          --frame-stride 2 \
          --max-side 1280
+
+   The input and output videos are not flags: they are the INPUT_VIDEO / OUTPUT_VIDEO
+   globals near the top of this file. Edit them to run on a different clip.
 
 3. Downsampling off (byte-for-byte equivalent to annotate_video.py):
 
@@ -65,7 +66,7 @@ USAGE
      - Prints resolved local model paths, source video metadata, the downsampled output
        geometry/FPS, the detections found on the first processed frame, then per-frame
        propagation progress.
-     - Writes an MP4 to --output in which every tracked object carries a translucent mask,
+     - Writes an MP4 to OUTPUT_VIDEO in which every tracked object carries a translucent mask,
        a mask-derived box, a label with the detected phrase + stable track ID + detection
        confidence, and a colour that is constant across frames for a given track ID.
      - Output frame count, FPS and resolution match the DOWNSAMPLED targets, and the
@@ -132,9 +133,12 @@ DEFAULT_SAM2_CHECKPOINT = _first_existing(
 )
 DEFAULT_BERT_DIR = REPO_ROOT / "checkpoints/bert-base-uncased"
 
-# Reference demo values, exposed as CLI defaults (not hardcoded as the only input).
-DEFAULT_INPUT = GSAM2_ROOT / "assets/hippopotamus.mp4"
-DEFAULT_OUTPUT = REPO_ROOT / "artifacts/hippopotamus_tracking_demo_fast.mp4"
+# Input/output video paths are fixed here rather than passed on the command line.
+# Edit these two to point the run at a different clip.
+INPUT_VIDEO = GSAM2_ROOT / "assets/hippopotamus.mp4"
+OUTPUT_VIDEO = REPO_ROOT / "artifacts/hippopotamus_tracking_demo_fast.mp4"
+
+# Reference demo value, exposed as a CLI default.
 DEFAULT_TEXT_PROMPT = "hippopotamus."
 
 # Downsampling defaults. Both are ON: this script exists to run faster than
@@ -224,18 +228,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         epilog=(
             "examples:\n"
-            '  python annotate_video_fast.py --input in.mp4 --output out.mp4 --text-prompt "car"\n'
+            '  python annotate_video_fast.py --text-prompt "car"\n'
             "  python annotate_video_fast.py --frame-stride 4 --max-side 480   # faster, rougher\n"
             "  python annotate_video_fast.py --frame-stride 1 --max-side 0     # no downsampling"
         ),
-    )
-    parser.add_argument(
-        "--input", type=Path, default=DEFAULT_INPUT,
-        help="Input video file (defaults to the reference demo clip).",
-    )
-    parser.add_argument(
-        "--output", type=Path, default=DEFAULT_OUTPUT,
-        help="Output MP4 path (defaults to the reference demo output).",
     )
     parser.add_argument(
         "--text-prompt", default=DEFAULT_TEXT_PROMPT,
@@ -391,8 +387,8 @@ def validate_bert_dir(bert_dir: Path) -> None:
 
 def validate_paths(args: argparse.Namespace) -> None:
     """Fail early, with actionable messages, on any bad path or device."""
-    if not args.input.is_file():
-        raise FileNotFoundError(f"Input video not found: {args.input}")
+    if not INPUT_VIDEO.is_file():
+        raise FileNotFoundError(f"Input video not found: {INPUT_VIDEO}")
     for label, path in (
         ("Grounding DINO config", args.grounding_dino_config),
         ("Grounding DINO checkpoint", args.grounding_dino_checkpoint),
@@ -411,10 +407,11 @@ def validate_paths(args: argparse.Namespace) -> None:
         )
     if args.device.startswith("cuda") and not torch.cuda.is_available():
         raise RuntimeError("--device requests CUDA but torch.cuda.is_available() is False.")
-    if args.output.suffix.lower() != ".mp4":
-        print(f"[warn] --output {args.output.name} does not end in .mp4; writing MP4 data anyway.")
+    if OUTPUT_VIDEO.suffix.lower() != ".mp4":
+        print(f"[warn] OUTPUT_VIDEO {OUTPUT_VIDEO.name} does not end in .mp4; "
+              "writing MP4 data anyway.")
     validate_bert_dir(args.bert_model_path)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT_VIDEO.parent.mkdir(parents=True, exist_ok=True)
 
 
 # --------------------------------------------------------------------------------------
@@ -1226,7 +1223,7 @@ def write_passthrough_video(reader: SequentialFrameReader, writer: cv2.VideoWrit
 def _run(args: argparse.Namespace) -> int:
     validate_paths(args)
 
-    meta = read_video_metadata(args.input)
+    meta = read_video_metadata(INPUT_VIDEO)
     out_meta = derive_output_meta(meta, args.frame_stride, args.max_side)
     out_size = (out_meta.width, out_meta.height)
     print(f"[video] {meta.path.name}: {meta}")
@@ -1258,7 +1255,7 @@ def _run(args: argparse.Namespace) -> int:
     # including when inference raises.
     with frames_directory(args.keep_frames_dir) as frames_dir:
         total_frames = extract_frames_to_dir(
-            args.input, frames_dir, args.jpeg_quality, args.frame_stride, out_size
+            INPUT_VIDEO, frames_dir, args.jpeg_quality, args.frame_stride, out_size
         )
         # SAM 2 orders frames with int(os.path.splitext(name)[0]); confirm our zero-padded
         # names sort numerically to 0..N-1 rather than trusting a lexicographic listing.
@@ -1278,8 +1275,8 @@ def _run(args: argparse.Namespace) -> int:
               f"@ {out_meta.fps:.3f} FPS")
 
         try:
-            reader = SequentialFrameReader(args.input, stride=args.frame_stride, size=out_size)
-            writer = open_video_writer(args.output, out_meta, args.codec)
+            reader = SequentialFrameReader(INPUT_VIDEO, stride=args.frame_stride, size=out_size)
+            writer = open_video_writer(OUTPUT_VIDEO, out_meta, args.codec)
 
             with torch.inference_mode():
                 grounding_model = load_grounding_dino(
@@ -1341,16 +1338,16 @@ def _run(args: argparse.Namespace) -> int:
 
     # Reopen the finished file: success is only reported on a video that verifiably opens,
     # kept every processed frame, kept the target geometry/FPS, and carries the annotations.
-    validate_output_video(args.output, out_meta, total_frames, frames_with_objects, objects_tracked)
+    validate_output_video(OUTPUT_VIDEO, out_meta, total_frames, frames_with_objects, objects_tracked)
 
-    size_mb = args.output.stat().st_size / 1024**2 if args.output.exists() else 0.0
+    size_mb = OUTPUT_VIDEO.stat().st_size / 1024**2 if OUTPUT_VIDEO.exists() else 0.0
     print(f"[done] {written} frames @ {out_meta.fps:.3f} FPS "
           f"({out_meta.width}x{out_meta.height}, {size_mb:.1f} MB)")
     print(f"[done] downsampling: stride={args.frame_stride}  max_side={args.max_side or 'off'}  "
           f"(source was {meta.width}x{meta.height} @ {meta.fps:.3f} FPS)")
     print(f"[done] objects_initialized={objects_tracked}  frames_with_objects={frames_with_objects}")
     print(f"[done] runtime={elapsed:.1f}s  avg_processing_fps={written / elapsed if elapsed else 0:.2f}")
-    print(f"[done] Output written to: {args.output.resolve()}")
+    print(f"[done] Output written to: {OUTPUT_VIDEO.resolve()}")
     return 0
 
 
