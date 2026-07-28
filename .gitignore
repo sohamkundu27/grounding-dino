@@ -114,6 +114,16 @@ build/
 !artifacts/panoptic_demo_annotated.mp4
 !artifacts/sam2_dense_demo_annotated.mp4
 
+# --- Bounding-box annotation (maskformer_box_annotate_video.py) ----------------
+# One short annotated demo (the 5.6 s crosswalk clip, 17 MB) opts out of the *.mp4
+# rule, same rationale as above. The pipeline's full run — three source clips, three
+# annotated mp4s and their .boxes.jsonl sidecars — lives under
+# outputs/maskformer_boxes/ and stays untracked: outputs/** already covers it, and
+# the longest result is ~200 MB, past what GitHub accepts per file. The source
+# clips are freely licensed and their Commons URLs are recorded in
+# artifacts/maskformer_box_demo_run.txt, so any run is reproducible from scratch.
+!artifacts/maskformer_box_demo_annotated.mp4
+
 # Local bert-base-uncased for Grounding DINO's text encoder: weights are large and
 # redistributable from HF, so the directory is never committed (checkpoints/** and
 # *.safetensors already cover it; named here so the intent is explicit).
